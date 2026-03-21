@@ -56,3 +56,5 @@ settings.json
 # Claude Code
 .claude/
 memory/
+
+pyplayer_0.5.0
