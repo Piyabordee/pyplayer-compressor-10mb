@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'window_pyplayer.ui'
+# Form implementation generated from reading ui file 'bin/window_pyplayer.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -428,22 +428,14 @@ class Ui_MainWindow(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setSpacing(1)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.buttonTrimStart = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonTrimStart.setMinimumSize(QtCore.QSize(44, 18))
-        self.buttonTrimStart.setMaximumSize(QtCore.QSize(95, 16777215))
-        self.buttonTrimStart.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonTrimStart.setText("Start")
-        self.buttonTrimStart.setCheckable(True)
-        self.buttonTrimStart.setObjectName("buttonTrimStart")
-        self.verticalLayout.addWidget(self.buttonTrimStart)
-        self.buttonTrimEnd = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonTrimEnd.setMinimumSize(QtCore.QSize(0, 18))
-        self.buttonTrimEnd.setMaximumSize(QtCore.QSize(95, 16777215))
-        self.buttonTrimEnd.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonTrimEnd.setText("End")
-        self.buttonTrimEnd.setCheckable(True)
-        self.buttonTrimEnd.setObjectName("buttonTrimEnd")
-        self.verticalLayout.addWidget(self.buttonTrimEnd)
+        self.buttonTrim = QtWidgets.QPushButton(self.frameAdvancedControls)
+        self.buttonTrim.setMinimumSize(QtCore.QSize(44, 18))
+        self.buttonTrim.setMaximumSize(QtCore.QSize(95, 16777215))
+        self.buttonTrim.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.buttonTrim.setText("Trim")
+        self.buttonTrim.setCheckable(True)
+        self.buttonTrim.setObjectName("buttonTrim")
+        self.verticalLayout.addWidget(self.buttonTrim)
         self.advanced_layout.addLayout(self.verticalLayout, 0, 1, 1, 1)
         self.verticalLayout_3.addWidget(self.frameAdvancedControls)
         self.dockControls.setWidget(self.dockWidgetContents)
@@ -771,9 +763,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        MainWindow.setTabOrder(self.buttonPause, self.buttonTrimStart)
-        MainWindow.setTabOrder(self.buttonTrimStart, self.buttonTrimEnd)
-        MainWindow.setTabOrder(self.buttonTrimEnd, self.spinFrame)
+        MainWindow.setTabOrder(self.buttonPause, self.buttonTrim)
+        MainWindow.setTabOrder(self.buttonTrim, self.spinFrame)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -840,12 +831,8 @@ class Ui_MainWindow(object):
 "\n"
 "Right-click for more options."))
         self.lineOutput.setToolTip(_translate("MainWindow", "No media is currently playing."))
-        self.buttonTrimStart.setToolTip(_translate("MainWindow", "Click to set the starting position of a trim/\n"
-"the point where the intro fade will stop.\n"
-"\n"
-"Right-click for more options."))
-        self.buttonTrimEnd.setToolTip(_translate("MainWindow", "Click to set the ending position of a trim/\n"
-"the point where the outro fade will stop.\n"
+        self.buttonTrim.setToolTip(_translate("MainWindow", "Click to set trim start at current position.\n"
+"End is automatically set to video end.\n"
 "\n"
 "Right-click for more options."))
         self.actionSave.setText(_translate("MainWindow", "&Save"))
