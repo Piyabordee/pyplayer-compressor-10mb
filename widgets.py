@@ -2815,16 +2815,19 @@ class QVideoSlider(QtW.QSlider):
             frame = self.pixelPosToRangeValue(event.pos())      # get frame
             gui.player.set_pause(True)                          # pause player while scrubbing
             gui.gifPlayer.gif.setPaused(True)                   # pause GIF player while scrubbing
-            if self.grabbing_clamp_maximum:
+            # New Quick Trim: START is locked when Trim button is clicked
+            # User can seek freely, don't allow dragging to change START
+            if gui.buttonTrim.isChecked():
+                # When trim is active, allow seeking to update END
+                # But START stays locked
                 gui.player.set_and_update_progress(frame, SetProgressContext.SCRUB)
-                # New Quick Trim: no manual marker dragging needed
-                # Trim is set by button click (start=current, end=video end)
+            elif self.grabbing_clamp_maximum:
+                gui.player.set_and_update_progress(frame, SetProgressContext.SCRUB)
                 gui.player.set_and_update_progress(min(gui.maximum, max(gui.minimum, frame)), SetProgressContext.SCRUB)
             elif self.grabbing_clamp_minimum:
                 gui.player.set_and_update_progress(frame, SetProgressContext.SCRUB)
-                # Update trim start position when dragging
                 gui.minimum = frame
-            else:                                               # not grabbing markers -> only update progress between markers
+            else:
                 gui.player.set_and_update_progress(min(gui.maximum, max(gui.minimum, frame)), SetProgressContext.SCRUB)
             self.last_mouseover_time = 0                        # reset last mouseover time to stop drawing timestamp immediately
             self.scrubbing = True                               # mark that we're scrubbing
