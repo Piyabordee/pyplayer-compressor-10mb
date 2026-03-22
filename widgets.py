@@ -2684,17 +2684,32 @@ class QVideoSlider(QtW.QSlider):
             #print(groove_rect, groove_rect.left(), groove_rect.topLeft(), dir(groove_rect))
 
             # draw triangle markers for start/end and cover slider outside trim TODO: this is not efficient
-            if self.clamp_minimum:
+            # New Quick Trim: show both START and END markers when Trim button is active
+            if gui.buttonTrim.isChecked():
+                # Draw START marker (minimum)
+                x_start = self.rangeValueToPixelPos(gui.minimum)
+                p.setPen(pen_thick)
+                p.drawRoundedRect(groove_rect.left(), groove_rect.top(), x_start, groove_rect.height(), 2, 2)
+                p.setPen(pen_thin)  # ↓ triangle (pointing down)
+                p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x_start, 2), QtCore.QPoint(x_start, self.height() - 2), QtCore.QPoint(x_start - 4, int(self.height() / 2))]))
+
+                # Draw END marker (maximum)
+                x_end = self.rangeValueToPixelPos(gui.maximum)
+                p.setPen(pen_thick)
+                p.drawRoundedRect(x_end, groove_rect.top(), groove_rect.width() - x_end - 1, groove_rect.height(), 2, 2)
+                p.setPen(pen_thin)  # ↓ triangle (pointing down)
+                p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x_end, 2), QtCore.QPoint(x_end, self.height() - 2), QtCore.QPoint(x_end + 4, int(self.height() / 2))]))
+            elif self.clamp_minimum:
                 x = self.rangeValueToPixelPos(gui.minimum)
                 p.setPen(pen_thick)
                 p.drawRoundedRect(groove_rect.left(), groove_rect.top(), x, groove_rect.height(), 2, 2)
-                p.setPen(pen_thin)                              # ↓ triangle
+                p.setPen(pen_thin)  # ↓ triangle
                 p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x, 2), QtCore.QPoint(x, self.height() - 2), QtCore.QPoint(x - 4, int(self.height() / 2))]))
             if self.clamp_maximum:
                 x = self.rangeValueToPixelPos(gui.maximum)
                 p.setPen(pen_thick)
                 p.drawRoundedRect(x, groove_rect.top(), groove_rect.width() - x - 1, groove_rect.height(), 2, 2)
-                p.setPen(pen_thin)                              # ↓ triangle
+                p.setPen(pen_thin)  # ↓ triangle
                 p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x, 2), QtCore.QPoint(x, self.height() - 2), QtCore.QPoint(x + 4, int(self.height() / 2))]))
 
         #for marker in self.markers:    # an idea for a more general implementation with an arbitrary number of "markers"
