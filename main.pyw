@@ -1152,8 +1152,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.dockControls.enterEvent = lambda e: self.dockControls.unsetCursor()
         self.menubar.enterEvent = lambda e: self.menubar.unsetCursor()
 
-        self.buttonTrimStart.contextMenuEvent = self.trimButtonContextMenuEvent
-        self.buttonTrimEnd.contextMenuEvent = self.trimButtonContextMenuEvent
+        self.buttonTrim.contextMenuEvent = self.trimButtonContextMenuEvent
         self.buttonExploreMediaPath.contextMenuEvent = self.buttonMediaLocationContextMenuEvent
         self.buttonMarkDeleted.contextMenuEvent = self.buttonMarkDeletedContextMenuEvent
         self.buttonSnapshot.contextMenuEvent = self.buttonSnapshotContextMenuEvent

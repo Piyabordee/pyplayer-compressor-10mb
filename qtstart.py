@@ -79,10 +79,6 @@ def exit(self: QtW.QMainWindow):
         logging.info('Exiting. self.closed set to True and player disabled.')
 
         if self.tray_icon is not None:
-            if self.dialog_settings.groupTray.isChecked() and not self.isHidden():
-                self.close()
-                if self.close_cancel_selected:          # in case we show a file-deletion dialog and the user clicks cancel/X
-                    return
             self.tray_icon.setVisible(False)
             logging.info('System tray icon stopped.')
 
@@ -408,8 +404,7 @@ def connect_widget_signals(self: QtW.QMainWindow):
     self.spinSecond.valueStepped.connect(self.update_time_spins)
     self.spinFrame.valueStepped.connect(self.update_frame_spin)
 
-    self.buttonTrimStart.toggled.connect(self.set_trim_start)
-    self.buttonTrimEnd.toggled.connect(self.set_trim_end)
+    self.buttonTrim.clicked.connect(lambda: self.set_trim(not self.buttonTrim.isChecked()))
     self.buttonTrimSave.clicked.connect(self.save)
     self.buttonNext.clicked.connect(self.handle_cycle_buttons)
     self.buttonPrevious.clicked.connect(lambda: self.handle_cycle_buttons(next=False))
