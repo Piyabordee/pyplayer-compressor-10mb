@@ -1299,26 +1299,25 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         return super().event(event)
 
 
-    def closeEvent(self, event: QtGui.QCloseEvent):     # 'spontaneous' -> X-button pressed, likely not exiting for real
+    def closeEvent(self, event: QtGui.QCloseEvent):
         self.close_cancel_selected = False              # referenced in qtstart.exit()
         self.close_was_spontaneous = event.spontaneous()
         logging.info(f'Closing (spontaneous={event.spontaneous()}).')
 
-        # if user doesn't want to minimize to tray, just exit immediately
-        minimize_to_tray = settings.groupTray.isChecked() and settings.checkTrayClose.isChecked()
-        force_close = (event.spontaneous() and not minimize_to_tray) or self.tray_icon is None
+        # Always exit directly - no minimize to tray
+        force_close = True
 
         # show deletion prompt if we still have files to delete
         if self.marked_for_deletion:
             logging.info(f'The following files are still marked for deletion, opening prompt: {self.marked_for_deletion}')
-            choice = self.show_delete_prompt(exiting=force_close or not event.spontaneous())
+            choice = self.show_delete_prompt(exiting=True)
             if choice == QtW.QMessageBox.Cancel:        # cancel selected, don't close
-                self.close_cancel_selected = True       # required in case .close() was called from qtstart.exit()
+                self.close_cancel_selected = True
                 logging.info('Close cancelled.')
                 return event.ignore()
 
         # show popup if we still have edits in progress -> cancel all if accepted
-        if self.edits_in_progress and (force_close or not event.spontaneous()):
+        if self.edits_in_progress:
             words = ('this', 'edit') if len(self.edits_in_progress) == 1 else ('these', 'edits')
             choice = qthelpers.getPopupOkCancel(
                 title=f'{words[1].capitalize()} still in progress!',
@@ -1327,7 +1326,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 **self.get_popup_location_kwargs()
             ).exec()
             if choice == QtW.QMessageBox.Cancel:
-                self.close_cancel_selected = True       # required in case .close() was called from qtstart.exit()
+                self.close_cancel_selected = True
                 logging.info('Close cancelled.')
                 return event.ignore()
             self.cancel_all(wait=True)
@@ -1337,16 +1336,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.dockControls.setFloating(False)            # hide fullscreen UI if needed
         logging.info('Player has been stopped.')
 
-        if force_close:
-            qtstart.exit(self)
-        else:
-            if not cfg.minimizedtotraywarningignored:
-                if event.spontaneous():                 # only show message if closeEvent was called by OS (i.e. X button pressed)
-                    self.tray_icon.showMessage('PyPlayer', 'Minimized to system tray')      # this emits messageClicked signal
-                cfg.minimizedtotraywarningignored = True
-            if settings.checkTrayResetFirstFileOnRestore.isChecked():
-                self.first_video_fully_loaded = False
-            gc.collect(generation=2)
+        qtstart.exit(self)
         return event.accept()
 
 
@@ -1754,63 +1744,54 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
 
     def trimButtonContextMenuEvent(self, event: QtGui.QContextMenuEvent):
-        ''' Handles the context (right-click) menu for the start/end
-            trim buttons. Includes the fade-mode menu, actions for
-            instantly setting new start/end positions, and disabled
-            actions displaying information about the current trim. '''
+        ''' Handles the context (right-click) menu for the trim button.
+            Includes trim info display and options. '''
         is_trim_mode = self.is_trim_mode()
-        show_length_label = is_trim_mode and self.minimum or self.maximum != self.frame_count
+        is_trim_active = self.buttonTrim.isChecked()
 
-        # create disabled action for displaying start time
-        verb = 'Start' if is_trim_mode else 'Fade to'
-        if self.minimum:
-            h, m, s, ms = get_hms(self.minimum / self.frame_rate)
-            if self.duration_rounded < 3600: start_label = f'{verb} {m}:{s:02}.{ms:02} (frame {self.minimum})'
-            else:                            start_label = f'{verb} {h}:{m:02}:{s:02} (frame {self.minimum})'
-        else:                                start_label = f'{verb}: Disabled'
-        start_label_action = QtW.QAction(start_label)
-        start_label_action.setEnabled(False)
+        context = QtW.QMenu(self)
 
-        # create disabled action for displaying end time
-        verb = 'End' if is_trim_mode else 'Fade from'
-        if self.maximum != self.frame_count:
-            h, m, s, ms = get_hms(self.maximum / self.frame_rate)
-            if self.duration_rounded < 3600: end_label = f'{verb}: {m}:{s:02}.{ms:02} (frame {self.maximum})'
-            else:                            end_label = f'{verb}: {h}:{m:02}:{s:02} (frame {self.maximum})'
-        else:                                end_label = f'{verb}: Disabled'
-        end_label_action = QtW.QAction(end_label)
-        end_label_action.setEnabled(False)
+        # Show current trim status if active
+        if is_trim_active:
+            start_ms = self.minimum * (1000 / self.fps)
+            remaining_ms = (self.maximum - self.minimum) * (1000 / self.fps)
 
-        # create disabled action for displaying trim length, if applicable
-        if show_length_label:
-            frames = self.maximum - self.minimum
-            seconds = frames / self.frame_rate
-            h, m, s, ms = get_hms(seconds)
-            if h: length_label = f'Length: {h}:{m:02}:{s:02} ({frames} frames)'
-            else: length_label = f'Length: {m}:{s:02}.{ms:02} ({frames} frames)'
-            length_label_action = QtW.QAction(length_label)
+            h, m, s, ms = get_hms(start_ms)
+            if self.duration_rounded < 3600:
+                start_label = f'Start: {m}:{s:02}.{ms:02}'
+            else:
+                start_label = f'Start: {h}:{m:02}:{s:02}'
+
+            h, m, s, ms = get_hms(remaining_ms)
+            if remaining_ms < 3600:
+                length_label = f'Length: {m}:{s:02}.{ms:02}'
+            else:
+                length_label = f'Length: {h}:{m:02}:{s:02}'
+
+            start_label_action = QtW.QAction(start_label, self)
+            start_label_action.setEnabled(False)
+            context.addAction(start_label_action)
+
+            length_label_action = QtW.QAction(length_label, self)
             length_label_action.setEnabled(False)
+            context.addAction(length_label_action)
+            context.addSeparator()
 
-        # actions for force-setting start/end times (disabled when no/useless media is playing)
+        # Set start action (for consistency with old workflow)
         set_start_action = QtW.QAction('Set &start to current position', self)
-        set_start_action.triggered.connect(lambda: self.set_trim_start(enabled=True))
-        set_end_action = QtW.QAction('Set &end to current position', self)
-        set_end_action.triggered.connect(lambda: self.set_trim_end(enabled=True))
+        set_start_action.triggered.connect(lambda: self.set_trim(enabled=True))
         if not self.video or self.is_static_image:
             set_start_action.setEnabled(False)
-            set_end_action.setEnabled(False)
-
-        # create context menu
-        context = QtW.QMenu(self)
         context.addAction(set_start_action)
-        context.addAction(set_end_action)
+
+        # Cancel trim action if active
+        if is_trim_active:
+            cancel_action = QtW.QAction('&Cancel trim', self)
+            cancel_action.triggered.connect(lambda: self.set_trim(enabled=False))
+            context.addAction(cancel_action)
+
         context.addSeparator()
         context.addMenu(self.menuTrimMode)
-        context.addSeparator()
-        context.addAction(start_label_action)
-        context.addAction(end_label_action)
-        if show_length_label:
-            context.addAction(length_label_action)
         context.exec(event.globalPos())
 
 
@@ -6095,6 +6076,43 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         else:
             self.maximum = self.sliderProgress.maximum()
             self.buttonTrimEnd.setText('End' if self.is_trim_mode() else ' Fade from ')
+
+
+    def set_trim(self, enabled: bool):
+        ''' Toggle trim mode - set start at current position, end at video end.
+
+        When enabled:
+            - Start position = current playback position
+            - End position = video end (automatic)
+            - Button displays remaining duration
+            - Slider clamps at minimum (start position)
+
+        When disabled:
+            - Reset to full video playback
+            - Button text returns to "Trim"
+        '''
+        if not self.video:       return self.buttonTrim.setChecked(False)
+        if self.is_static_image: return self.buttonTrim.setChecked(False)
+
+        self.buttonTrim.setChecked(enabled)
+        self.sliderProgress.clamp_minimum = enabled
+        self.sliderProgress.clamp_maximum = False  # end is always video end
+
+        if enabled:
+            self.minimum = get_ui_frame()
+            self.maximum = self.sliderProgress.maximum()
+
+            # Calculate and display remaining duration
+            remaining_ms = (self.maximum - self.minimum) * (1000 / self.fps)
+            h, m, s, ms = get_hms(remaining_ms)
+            if remaining_ms < 3600:
+                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
+            else:
+                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
+        else:
+            self.minimum = self.sliderProgress.minimum()
+            self.maximum = self.sliderProgress.maximum()
+            self.buttonTrim.setText('Trim')
 
 
     def set_trim_mode(self, action: QtW.QAction):
