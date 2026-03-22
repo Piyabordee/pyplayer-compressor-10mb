@@ -3487,8 +3487,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
             # misc cleanup/setup for new media that we can safely do before fully parsing
             self.operations.clear()
-            self.buttonTrimStart.setChecked(False)
-            self.buttonTrimEnd.setChecked(False)
+            self.buttonTrim.setChecked(False)
 
             # set basename (w/o extension) as default output text,...
             # ...full basename as placeholder text, and update tooltip
