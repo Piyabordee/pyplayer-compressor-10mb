@@ -6090,8 +6090,14 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             - Reset to full video playback
             - Button text returns to "Trim"
         '''
-        if not self.video:       return self.buttonTrim.setChecked(False)
-        if self.is_static_image: return self.buttonTrim.setChecked(False)
+        logging.info(f'>>> set_trim called: enabled={enabled}, video={self.video}, is_static_image={self.is_static_image}')
+
+        if not self.video:
+            logging.info('>>> set_trim: No video, returning')
+            return self.buttonTrim.setChecked(False)
+        if self.is_static_image:
+            logging.info('>>> set_trim: Static image, returning')
+            return self.buttonTrim.setChecked(False)
 
         self.buttonTrim.setChecked(enabled)
         self.sliderProgress.clamp_minimum = enabled
@@ -6101,16 +6107,22 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             self.minimum = get_ui_frame()
             self.maximum = self.sliderProgress.maximum()
 
+            logging.info(f'>>> set_trim ENABLED: minimum={self.minimum}, maximum={self.maximum}, fps={self.fps}')
+
             # Calculate and display remaining duration
             remaining_ms = (self.maximum - self.minimum) * (1000 / self.fps)
             h, m, s, ms = get_hms(remaining_ms)
             if remaining_ms < 3600:
-                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
+                new_text = f'{m}:{s:02}.{ms:02}'
             else:
-                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
+                new_text = f'{h}:{m:02}:{s:02}'
+
+            logging.info(f'>>> set_trim: remaining_ms={remaining_ms}, button text={new_text}')
+            self.buttonTrim.setText(new_text)
         else:
             self.minimum = self.sliderProgress.minimum()
             self.maximum = self.sliderProgress.maximum()
+            logging.info(f'>>> set_trim DISABLED: reset to full video')
             self.buttonTrim.setText('Trim')
 
 
