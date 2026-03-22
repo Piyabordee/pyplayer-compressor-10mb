@@ -3487,7 +3487,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
             # misc cleanup/setup for new media that we can safely do before fully parsing
             self.operations.clear()
+            self.buttonTrim.blockSignals(True)
             self.buttonTrim.setChecked(False)
+            self.buttonTrim.blockSignals(False)
 
             # set basename (w/o extension) as default output text,...
             # ...full basename as placeholder text, and update tooltip
@@ -6094,12 +6096,16 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         if not self.video:
             logging.info('>>> set_trim: No video, returning')
-            return self.buttonTrim.setChecked(False)
+            return
         if self.is_static_image:
             logging.info('>>> set_trim: Static image, returning')
-            return self.buttonTrim.setChecked(False)
+            return
 
+        # Avoid loop - block signals while updating button state
+        self.buttonTrim.blockSignals(True)
         self.buttonTrim.setChecked(enabled)
+        self.buttonTrim.blockSignals(False)
+
         self.sliderProgress.clamp_minimum = enabled
         self.sliderProgress.clamp_maximum = False  # end is always video end
 
