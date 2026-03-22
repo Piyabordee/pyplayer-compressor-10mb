@@ -983,6 +983,60 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         super().__init__(*args, **kwargs)
         self.app = app
         self.setupUi(self)
+
+        # Dummy widgets for removed UI elements (to prevent AttributeError)
+        # These widgets were removed from the UI but code still references them
+
+        # Dummy button class with no-op methods
+        class DummyPushButton(QtW.QPushButton):
+            def setIcon(self, *args): pass
+            def setChecked(self, *args): pass
+            def isChecked(self): return False
+            def setVisible(self, *args): pass
+            def setToolTip(self, *args): pass
+            def contextMenuEvent(self, *args): pass
+
+        # Dummy line edit class with no-op methods
+        class DummyLineEdit(QtW.QLineEdit):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self._text = ''
+                self._placeholder = ''
+                self._tooltip = ''
+                self._minimum_width = 0
+                self._ignored_keys = set()
+                self._ignore_all = False
+                self._proxy_widget = None
+            def setProxyWidget(self, *args): pass
+            def setIgnoredKeys(self, *args): pass
+            def setIgnoreAll(self, *args): pass
+            def setMinimumWidth(self, w): self._minimum_width = w
+            def minimumWidth(self): return self._minimum_width
+            def setPlaceholderText(self, text): self._placeholder = text
+            def setToolTip(self, text): self._tooltip = text
+            def clearFocus(self): pass
+            def clear(self): self._text = ''
+            def setText(self, text): self._text = text
+            def text(self): return self._text
+            def height(self): return 18
+            def setVisible(self, *args): pass
+            def hasFocus(self): return False
+
+        self.buttonExploreMediaPath = DummyPushButton(self)
+        self.buttonExploreMediaPath.setVisible(False)
+        self.buttonMarkDeleted = DummyPushButton(self)
+        self.buttonMarkDeleted.setVisible(False)
+        self.buttonSnapshot = DummyPushButton(self)
+        self.buttonSnapshot.setVisible(False)
+        self.buttonPrevious = DummyPushButton(self)
+        self.buttonPrevious.setVisible(False)
+        self.buttonNext = DummyPushButton(self)
+        self.buttonNext.setVisible(False)
+        self.buttonTrimSave = DummyPushButton(self)
+        self.buttonTrimSave.setVisible(False)
+        self.lineOutput = DummyLineEdit(self)
+        self.lineOutput.setVisible(False)
+
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)             # this allows easier clicking off of lineEdits
         self.save_progress_bar = QtW.QProgressBar(self.statusbar)
         self.dialog_settings = qthelpers.getDialogFromUiClass(Ui_settingsDialog, flags=Qt.WindowStaysOnTopHint)

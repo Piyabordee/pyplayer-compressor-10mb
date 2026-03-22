@@ -791,109 +791,9 @@ skip over files that have been marked for deletion.</string>
               </property>
              </spacer>
             </item>
-            <item row="0" column="6">
-             <widget class="QPushButton" name="buttonNext">
-              <property name="minimumSize">
-               <size>
-                <width>20</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>20</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>Plays the next media file in the current folder.
-
-Click: Plays next valid file.
-Ctrl + click: Plays a random file.
-Shift + click: Plays next valid file that matches the current mime type (video, audio, or image).
-Alt + click: Plays a random file that matches the current mime type (video, audio, or image).
-
-Right-click for more options.</string>
-              </property>
-              <property name="text">
-               <string notr="true"/>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="7">
-             <widget class="QPushButton" name="buttonTrimSave">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>60</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>Save the trimmed video to a new file.</string>
-              </property>
-              <property name="text">
-               <string notr="true">Save</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="buttonMarkDeleted">
-              <property name="minimumSize">
-               <size>
-                <width>22</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>22</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>Mark media for future deletion.
-0 files are currently marked for deletion.
-
-Shortcuts:
-Shift + click: Show deletion-confirmation prompt.
-Ctrl + click: Immediately delete current media.
-
-Right-click for more options. Deletion-confirmation
-prompt is shown on exit if any files are marked.</string>
-              </property>
-              <property name="text">
-               <string notr="true">❌</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
+            <!-- REMOVED: buttonNext -->
+            <!-- REMOVED: buttonTrimSave -->
+            <!-- REMOVED: buttonMarkDeleted -->
             <item row="0" column="3">
              <widget class="QPushButton" name="buttonLoop">
               <property name="minimumSize">
@@ -927,75 +827,8 @@ prompt is shown on exit if any files are marked.</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="buttonExploreMediaPath">
-              <property name="minimumSize">
-               <size>
-                <width>22</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>22</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>Open media location</string>
-              </property>
-              <property name="text">
-               <string notr="true">📂</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="buttonSnapshot">
-              <property name="minimumSize">
-               <size>
-                <width>22</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>22</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>Takes a snapshot of the current media at its current position.
-
-Ctrl + click: Opens size and save-file dialogs for your snapshot.
-Shift + click: Opens the last snapshot in PyPlayer.
-Alt + click: Opens the last snapshot in your default program.
-
-Right-click for more options.</string>
-              </property>
-              <property name="text">
-               <string notr="true">📷</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
+            <!-- REMOVED: buttonExploreMediaPath -->
+            <!-- REMOVED: buttonSnapshot -->
             <item row="0" column="4">
              <widget class="QPushButton" name="buttonAutoplay">
               <property name="minimumSize">
@@ -1032,71 +865,8 @@ automatically play upon completion of the current media.</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="5">
-             <widget class="QPushButton" name="buttonPrevious">
-              <property name="minimumSize">
-               <size>
-                <width>20</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>20</width>
-                <height>18</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>Plays the previous media file in the current folder.
-
-Click: Plays previous valid file.
-Ctrl + click: Plays a random file.
-Shift + click: Plays previous valid file that matches the current mime type (video, audio, or image).
-Alt + click: Plays a random file that matches the current mime type (video, audio, or image).
-
-Right-click for more options.</string>
-              </property>
-              <property name="text">
-               <string notr="true"/>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0" colspan="8">
-             <widget class="QLineEditPassthrough" name="lineOutput">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>120</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::ClickFocus</enum>
-              </property>
-              <property name="toolTip">
-               <string>No media is currently playing.</string>
-              </property>
-              <property name="maxLength">
-               <number>155</number>
-              </property>
-              <property name="placeholderText">
-               <string notr="true">Output name</string>
-              </property>
-             </widget>
-            </item>
+            <!-- REMOVED: buttonPrevious -->
+            <!-- REMOVED: lineOutput -->
            </layout>
           </item>
          </layout>
