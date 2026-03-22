@@ -6024,56 +6024,58 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         refresh_title()                                             # refresh title to hide progress percentage
 
 
-    def set_trim_start(self, enabled: bool):
-        ''' Sets the start-point marker's check-state to `enabled`, sets it to
-            the current frame, validates it, and updates the UI accordingly. '''
-        if not self.video:       return self.buttonTrimStart.setChecked(False)
-        if self.is_static_image: return self.buttonTrimStart.setChecked(False)
-
-        self.buttonTrimStart.setChecked(enabled)
-        self.sliderProgress.clamp_minimum = enabled
-
-        if enabled:
-            desired_minimum = get_ui_frame()
-            if desired_minimum > self.maximum:
-                set_and_update_progress(self.maximum, SetProgressContext.RESET_TO_MAX)
-                self.minimum = self.maximum
-                show_on_statusbar('You cannot set the start of your trim after the end of it.')
-            else:
-                self.minimum = desired_minimum
-
-            h, m, s, ms = get_hms(self.current_time)                # use cleaner format for time-strings on videos > 1 hour
-            if self.duration_rounded < 3600: self.buttonTrimStart.setText(f'{m}:{s:02}.{ms:02}')
-            else:                            self.buttonTrimStart.setText(f'{h}:{m:02}:{s:02}')
-        else:
-            self.minimum = self.sliderProgress.minimum()
-            self.buttonTrimStart.setText('Start' if self.is_trim_mode() else ' Fade to ')
-
-
-    def set_trim_end(self, enabled: bool):
-        ''' Sets the end-point marker's check-state to `enabled`, sets it to
-            the current frame, validates it, and updates the UI accordingly. '''
-        if not self.video:       return self.buttonTrimEnd.setChecked(False)
-        if self.is_static_image: return self.buttonTrimEnd.setChecked(False)
-
-        self.buttonTrimEnd.setChecked(enabled)
-        self.sliderProgress.clamp_maximum = enabled
-
-        if enabled:
-            desired_maximum = get_ui_frame()
-            if desired_maximum < self.minimum:
-                set_and_update_progress(self.minimum, SetProgressContext.RESET_TO_MIN)
-                self.maximum = self.minimum
-                show_on_statusbar('You cannot set the end of your trim before the start of it.')
-            else:
-                self.maximum = desired_maximum
-
-            h, m, s, ms = get_hms(self.current_time)                # use cleaner format for time-strings on videos > 1 hour
-            if self.duration_rounded < 3600: self.buttonTrimEnd.setText(f'{m}:{s:02}.{ms:02}')
-            else:                            self.buttonTrimEnd.setText(f'{h}:{m:02}:{s:02}')
-        else:
-            self.maximum = self.sliderProgress.maximum()
-            self.buttonTrimEnd.setText('End' if self.is_trim_mode() else ' Fade from ')
+    # DEPRECATED: Replaced by set_trim() - kept for reference/rollback
+    # def set_trim_start(self, enabled: bool):
+    #     ''' Sets the start-point marker's check-state to `enabled`, sets it to
+    #         the current frame, validates it, and updates the UI accordingly. '''
+    #     if not self.video:       return self.buttonTrimStart.setChecked(False)
+    #     if self.is_static_image: return self.buttonTrimStart.setChecked(False)
+    #
+    #     self.buttonTrimStart.setChecked(enabled)
+    #     self.sliderProgress.clamp_minimum = enabled
+    #
+    #     if enabled:
+    #         desired_minimum = get_ui_frame()
+    #         if desired_minimum > self.maximum:
+    #             set_and_update_progress(self.maximum, SetProgressContext.RESET_TO_MAX)
+    #             self.minimum = self.maximum
+    #             show_on_statusbar('You cannot set the start of your trim after the end of it.')
+    #         else:
+    #             self.minimum = desired_minimum
+    #
+    #         h, m, s, ms = get_hms(self.current_time)                # use cleaner format for time-strings on videos > 1 hour
+    #         if self.duration_rounded < 3600: self.buttonTrimStart.setText(f'{m}:{s:02}.{ms:02}')
+    #         else:                            self.buttonTrimStart.setText(f'{h}:{m:02}:{s:02}')
+    #     else:
+    #         self.minimum = self.sliderProgress.minimum()
+    #         self.buttonTrimStart.setText('Start' if self.is_trim_mode() else ' Fade to ')
+    #
+    #
+    # # DEPRECATED: Replaced by set_trim() - kept for reference/rollback
+    # def set_trim_end(self, enabled: bool):
+    #     ''' Sets the end-point marker's check-state to `enabled`, sets it to
+    #         the current frame, validates it, and updates the UI accordingly. '''
+    #     if not self.video:       return self.buttonTrimEnd.setChecked(False)
+    #     if self.is_static_image: return self.buttonTrimEnd.setChecked(False)
+    #
+    #     self.buttonTrimEnd.setChecked(enabled)
+    #     self.sliderProgress.clamp_maximum = enabled
+    #
+    #     if enabled:
+    #         desired_maximum = get_ui_frame()
+    #         if desired_maximum < self.minimum:
+    #             set_and_update_progress(self.minimum, SetProgressContext.RESET_TO_MIN)
+    #             self.maximum = self.minimum
+    #             show_on_statusbar('You cannot set the end of your trim before the start of it.')
+    #         else:
+    #             self.maximum = desired_maximum
+    #
+    #         h, m, s, ms = get_hms(self.current_time)                # use cleaner format for time-strings on videos > 1 hour
+    #         if self.duration_rounded < 3600: self.buttonTrimEnd.setText(f'{m}:{s:02}.{ms:02}')
+    #         else:                            self.buttonTrimEnd.setText(f'{h}:{m:02}:{s:02}')
+    #     else:
+    #         self.maximum = self.sliderProgress.maximum()
+    #         self.buttonTrimEnd.setText('End' if self.is_trim_mode() else ' Fade from ')
 
 
     def set_trim(self, enabled: bool):
