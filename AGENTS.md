@@ -243,14 +243,29 @@ Uses PyInstaller with:
    - Eliminates need to activate trim mode first
    - Improves workflow for quick video exports
 
-2. **Quick Trim button** - Single Trim button replaces Start/End buttons
-   - Sets start at current position, end at video end automatically
-   - Toggle on/off with single click
+2. **Quick Trim button** - Single Trim button replaces Start/End buttons (fully implemented)
+   - Click Trim to set START at current position
+   - END automatically follows current playback/seek position
    - Button displays remaining duration when active
-   - Click again to cancel trim
+   - Click Trim again to cancel trim
+   - Visual feedback: Triangle markers on seek bar show START (left) and END (right) positions
 
 **Recent Commits:**
 ```
+23017fd - refactor(ui): remove unused buttons and tooltips from advanced controls
+aa040b7 - refactor(ui): remove unused buttons and tooltips from advanced controls
+d8cc2e6 - refactor(ui): remove unused buttons and add dummy widgets to prevent errors
+6e18a87 - chore: update config.ini with new settings
+09a086e - chore: update .gitignore to include build outputs and temporary files
+dad013b - refactor: remove debug logging from trim implementation
+c021fa7 - feat(widgets): show both START and END markers on seek bar
+7084027 - fix(widgets): prevent START from moving during trim mode
+d1130f7 - fix(trim): lock START position, let END follow playback
+1ca518e - feat(trim): new workflow - start at current, end follows seek
+0d2ccfa - fix(trim): use toggled signal instead of clicked
+92d596a - fix(open): reset buttonTrim instead of buttonTrimStart/End
+92855e4 - docs(readme): update trim workflow description
+4b63acf - docs(AGENTS): document Quick Trim button feature
 3eb5878 - docs(constants): update trim tooltip constant
 eb1e5d3 - refactor(trim): update set_trim_mode for buttonTrim
 b3c7348 - refactor(trim): comment out deprecated set_trim_start/end functions
@@ -261,9 +276,9 @@ ccf48cd - fix(playback): update trim end check for buttonTrim
 45d9a81 - feat(trim): add set_trim() function for quick trim behavior
 4284c0d - refactor(ui): regenerate window_pyplayer.py with new Trim button
 bc133a6 - refactor(ui): replace Start/End buttons with single Trim button
-e6f434f - chore: Remove pyplayer_0.5.0 build artifacts
-c2f4f36 - docs: Rewrite README with fresh content
-a83c5c3 - Initial fork: PyPlayer with always-visible Save button
+0175e8b - docs: Add Quick Trim Button implementation plan
+6b0b4ca - docs: Add Quick Trim Button design spec
+9837194 - docs: Add AGENTS.md for project-specific guidance and architecture overview
 ```
 
 ---
@@ -315,5 +330,5 @@ When working on this codebase:
 
 ---
 
-*Last Updated: 2026-03-22*
+*Last Updated: 2026-03-22 (Updated with 31 recent commits)*
 *Generated for: PyPlayer Compressor 0.6.0 beta*
