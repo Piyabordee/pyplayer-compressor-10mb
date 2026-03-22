@@ -6118,16 +6118,10 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
     def set_trim_mode(self, action: QtW.QAction):
         ''' Updates UI/tooltips for `action`'s associated trim mode. '''
         cfg.trimmodeselected = True
-        if action in (self.actionTrimAuto, self.actionTrimPrecise):
-            self.buttonTrimStart.setText(self.buttonTrimStart.text().replace(' Fade to ', 'Start'))
-            self.buttonTrimEnd.setText(self.buttonTrimEnd.text().replace(' Fade from ', 'End'))
-            for button in (self.buttonTrimStart, self.buttonTrimEnd):
-                button.setToolTip(constants.TRIM_BUTTON_TOOLTIP_BASE.replace('?mode', 'trim'))
-        else:
-            self.buttonTrimStart.setText(self.buttonTrimStart.text().replace('Start', ' Fade to '))
-            self.buttonTrimEnd.setText(self.buttonTrimEnd.text().replace('End', ' Fade from '))
-            for button in (self.buttonTrimStart, self.buttonTrimEnd):
-                button.setToolTip(constants.TRIM_BUTTON_TOOLTIP_BASE.replace('?mode', 'fade'))
+        # buttonTrim text shows duration, not mode-specific
+        # Only update tooltip
+        mode = 'trim' if action in (self.actionTrimAuto, self.actionTrimPrecise) else 'fade'
+        self.buttonTrim.setToolTip(constants.TRIM_BUTTON_TOOLTIP_BASE.replace('?mode', mode))
 
 
     def concatenate(self, action: QtW.QAction = None, files: list[str] = None):
