@@ -9,9 +9,10 @@
 
 ## What's Changed
 
-This fork includes a UI enhancement for faster video editing workflow:
+This fork includes UI enhancements for faster video editing workflow:
 
 - **Always-visible Save Button** — The Save button is now permanently displayed in the quick actions row (next to the Next button), eliminating the need to activate trim mode first.
+- **Quick Trim Button** — A single Trim button replaces the separate Start/End buttons. Click once to set trim start at current position (end automatically at video end), click again to cancel. The button displays the remaining duration when active.
 
 ---
 
@@ -62,7 +63,7 @@ Download VLC and place it in the `executable/include/` directory:
 - **Open File:** Drag & drop or use File menu
 - **Play/Pause:** Click on video player or press Space
 - **Seek:** Click on progress bar or use arrow keys
-- **Trim:** Set Start/End points, then click **Save**
+- **Trim:** Click **Trim** button to set start at current position (end automatically at video end), then click **Save**. Click Trim again to cancel.
 - **Crop:** Enable crop mode from menu, adjust borders
 - **Snapshot:** Click camera icon to capture frame
 
