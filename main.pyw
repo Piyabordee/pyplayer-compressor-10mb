@@ -6113,10 +6113,10 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             self.minimum = get_ui_frame()
             self.maximum = self.sliderProgress.maximum()
 
-            logging.info(f'>>> set_trim ENABLED: minimum={self.minimum}, maximum={self.maximum}, fps={self.fps}')
+            logging.info(f'>>> set_trim ENABLED: minimum={self.minimum}, maximum={self.maximum}, fps={self.frame_rate}')
 
             # Calculate and display remaining duration
-            remaining_ms = (self.maximum - self.minimum) * (1000 / self.fps)
+            remaining_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
             h, m, s, ms = get_hms(remaining_ms)
             if remaining_ms < 3600:
                 new_text = f'{m}:{s:02}.{ms:02}'
