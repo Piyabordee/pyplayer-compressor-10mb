@@ -5500,7 +5500,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 frame = min(self.maximum, max(self.minimum, frame))
 
                 # pause or loop media if we've reached the end of our desired trim
-                if frame >= self.maximum and self.buttonTrimEnd.isChecked():
+                if frame >= self.maximum and self.buttonTrim.isChecked():
                     if not self.actionLoop.isChecked():
                         self.force_pause(True)
                         set_and_update_progress(self.maximum, SetProgressContext.RESET_TO_MAX)
