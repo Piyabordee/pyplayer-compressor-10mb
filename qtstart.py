@@ -404,11 +404,7 @@ def connect_widget_signals(self: QtW.QMainWindow):
     self.spinSecond.valueStepped.connect(self.update_time_spins)
     self.spinFrame.valueStepped.connect(self.update_frame_spin)
 
-    def on_trim_toggled(checked):
-        logging.info(f'>>> Trim button toggled! new_state={checked}')
-        self.set_trim(checked)
-
-    self.buttonTrim.toggled.connect(on_trim_toggled)
+    self.buttonTrim.toggled.connect(lambda checked: self.set_trim(checked))
     self.buttonTrimSave.clicked.connect(self.save)
     self.buttonNext.clicked.connect(self.handle_cycle_buttons)
     self.buttonPrevious.clicked.connect(lambda: self.handle_cycle_buttons(next=False))

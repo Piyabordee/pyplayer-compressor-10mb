@@ -5496,26 +5496,17 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         ''' Updates every section of the UI to reflect the
             current `frame`. Clamps playback to desired trims.
             Loops if necessary. Locks spinboxes while updating. '''
-        # Debug logging
-        if self.buttonTrim.isChecked() and frame % 600 == 0:  # Log every ~10 seconds
-            logging.info(f'>>> update_progress: frame={frame}, minimum={self.minimum}, maximum={self.maximum}')
-
         # When trim is active, update maximum (END) to follow current position
         # But minimum (START) stays locked at where Trim was clicked
-        if self.buttonTrim.isChecked():
-            if frame > self.maximum:
-                old_max = self.maximum
-                self.maximum = frame
-                logging.info(f'>>> update_progress: UPDATE maximum from {old_max} to {self.maximum}')
-                # Update button text to show new duration
-                duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
-                h, m, s, ms = get_hms(duration_ms)
-                if duration_ms < 3600:
-                    new_text = f'{m}:{s:02}.{ms:02}'
-                else:
-                    new_text = f'{h}:{m:02}:{s:02}'
-                self.buttonTrim.setText(new_text)
-                logging.info(f'>>> update_progress: duration_ms={duration_ms:.0f}, text={new_text}')
+        if self.buttonTrim.isChecked() and frame > self.maximum:
+            self.maximum = frame
+            # Update button text to show new duration
+            duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
+            h, m, s, ms = get_hms(duration_ms)
+            if duration_ms < 3600:
+                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
+            else:
+                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
 
         # Allow playback beyond minimum - START is locked, but playback continues
         # Only stop if we reach the actual end of video
@@ -6111,13 +6102,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             - Reset to full video playback
             - Button text returns to "Trim"
         '''
-        logging.info(f'>>> set_trim called: enabled={enabled}, video={self.video}, is_static_image={self.is_static_image}')
-
         if not self.video:
-            logging.info('>>> set_trim: No video, returning')
             return
         if self.is_static_image:
-            logging.info('>>> set_trim: Static image, returning')
             return
 
         # Avoid loop - block signals while updating button state
@@ -6134,22 +6121,16 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             twenty_sec_frames = int(20 * self.frame_rate)
             self.maximum = min(self.minimum + twenty_sec_frames, self.sliderProgress.maximum())
 
-            logging.info(f'>>> set_trim ENABLED: minimum={self.minimum}, maximum={self.maximum}, fps={self.frame_rate}')
-
             # Calculate and display duration
             duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
             h, m, s, ms = get_hms(duration_ms)
             if duration_ms < 3600:
-                new_text = f'{m}:{s:02}.{ms:02}'
+                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
             else:
-                new_text = f'{h}:{m:02}:{s:02}'
-
-            logging.info(f'>>> set_trim: duration_ms={duration_ms}, button text={new_text}')
-            self.buttonTrim.setText(new_text)
+                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
         else:
             self.minimum = self.sliderProgress.minimum()
             self.maximum = self.sliderProgress.maximum()
-            logging.info(f'>>> set_trim DISABLED: reset to full video')
             self.buttonTrim.setText('Trim')
 
 
