@@ -1708,13 +1708,12 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.lineOutput.setMinimumWidth(10 if width <= 380 else 120)                # reduce output lineEdit (but retain usability)
         self.advancedControlsLine.setVisible(width >= 357)                          # hide aesthetic line-separator
         self.glayoutQuickButtons.setHorizontalSpacing(2 if width <= 394 else 6)     # reduce spacing between buttons
-        self.buttonTrimStart.setMinimumWidth(32 if width <= 347 else 44)
+        self.buttonTrim.setMinimumWidth(32 if width <= 347 else 44)
 
         # hide or restore trim/toolbar buttons
         primary_visible = width > 335
         seconary_visible = width > 394
-        self.buttonTrimStart.setVisible(primary_visible)
-        self.buttonTrimEnd.setVisible(primary_visible)
+        self.buttonTrim.setVisible(primary_visible)
         self.buttonMarkDeleted.setVisible(seconary_visible)
         self.buttonSnapshot.setVisible(seconary_visible)
         self.buttonExploreMediaPath.setVisible(seconary_visible)
