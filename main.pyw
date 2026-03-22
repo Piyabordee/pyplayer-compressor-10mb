@@ -4616,8 +4616,8 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         operations = self.operations.copy()
         if self.actionCrop.isChecked():      operations['crop'] = True
-        if self.buttonTrimStart.isChecked(): operations['trim start'] = True
-        if self.buttonTrimEnd.isChecked():   operations['trim end'] = True
+        if self.buttonTrim.isChecked(): operations['trim start'] = True
+        # End is always at video end, no need for 'trim end' operation
 
         ext = ''
         old_base, old_ext = splitext_media(video)
