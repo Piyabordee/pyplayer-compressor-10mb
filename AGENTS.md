@@ -238,13 +238,29 @@ Uses PyInstaller with:
 ### This Fork: PyPlayer Compressor
 **Repository:** https://github.com/Piyabordee/pyplayer-compressor-10mb
 
-**Modification:** Always-visible Save button
-- The Save button is permanently displayed in the quick actions row (next to Next button)
-- Eliminates need to activate trim mode first
-- Improves workflow for quick video exports
+**Modifications:**
+1. **Always-visible Save button** - Save button permanently displayed in the quick actions row
+   - Eliminates need to activate trim mode first
+   - Improves workflow for quick video exports
+
+2. **Quick Trim button** - Single Trim button replaces Start/End buttons
+   - Sets start at current position, end at video end automatically
+   - Toggle on/off with single click
+   - Button displays remaining duration when active
+   - Click again to cancel trim
 
 **Recent Commits:**
 ```
+3eb5878 - docs(constants): update trim tooltip constant
+eb1e5d3 - refactor(trim): update set_trim_mode for buttonTrim
+b3c7348 - refactor(trim): comment out deprecated set_trim_start/end functions
+ccf48cd - fix(playback): update trim end check for buttonTrim
+064cb41 - fix(save): update trim check for buttonTrim
+9934f57 - refactor(layout): update responsive layout for buttonTrim
+33b082e - refactor(signals): connect buttonTrim signal
+45d9a81 - feat(trim): add set_trim() function for quick trim behavior
+4284c0d - refactor(ui): regenerate window_pyplayer.py with new Trim button
+bc133a6 - refactor(ui): replace Start/End buttons with single Trim button
 e6f434f - chore: Remove pyplayer_0.5.0 build artifacts
 c2f4f36 - docs: Rewrite README with fresh content
 a83c5c3 - Initial fork: PyPlayer with always-visible Save button
