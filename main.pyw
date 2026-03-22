@@ -5496,7 +5496,8 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         ''' Updates every section of the UI to reflect the
             current `frame`. Clamps playback to desired trims.
             Loops if necessary. Locks spinboxes while updating. '''
-        # When trim is active, update maximum (END) to follow user's seek position
+        # When trim is active, update maximum (END) to follow current position
+        # But minimum (START) stays locked at where Trim was clicked
         if self.buttonTrim.isChecked() and frame > self.minimum:
             self.maximum = frame
             # Update button text to show new duration
@@ -5507,17 +5508,15 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             else:
                 self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
 
-        if not self.minimum <= frame <= self.maximum:
-            if not (self.sliderProgress.grabbing_clamp_minimum or self.sliderProgress.grabbing_clamp_maximum):
-                frame = min(self.maximum, max(self.minimum, frame))
-
-                # pause or loop media if we've reached the end of our desired trim
-                if frame >= self.maximum and self.buttonTrim.isChecked():
-                    if not self.actionLoop.isChecked():
-                        self.force_pause(True)
-                        set_and_update_progress(self.maximum, SetProgressContext.RESET_TO_MAX)
-                    else:
-                        return set_and_update_progress(self.minimum, SetProgressContext.RESET_TO_MIN)
+        # Allow playback beyond minimum - START is locked, but playback continues
+        # Only stop if we reach the actual end of video
+        if frame >= self.sliderProgress.maximum():
+            if self.buttonTrim.isChecked():
+                if not self.actionLoop.isChecked():
+                    self.force_pause(True)
+                    set_and_update_progress(self.minimum, SetProgressContext.RESET_TO_MIN)
+                else:
+                    return set_and_update_progress(self.minimum, SetProgressContext.RESET_TO_MIN)
 
         current_time = round(self.duration_rounded * (frame / self.frame_count), 2)
         self.current_time = current_time
