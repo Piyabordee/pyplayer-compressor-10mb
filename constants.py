@@ -113,8 +113,8 @@ Enter: Rename this file to whatever you've entered.
 Shift + Enter: Open the entered file if it exists.
 Tab: View files similar to your entry (*/? supported).'''
 
-TRIM_BUTTON_TOOLTIP_BASE = '''Click to set the starting position of a trim/
-the point where the intro fade will stop.
+TRIM_BUTTON_TOOLTIP_BASE = '''Click to set trim start at current position.
+End is automatically set to video end.
 
 Currently in ?mode mode.
 Right-click for more options.'''
