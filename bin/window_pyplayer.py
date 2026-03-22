@@ -279,34 +279,7 @@ class Ui_MainWindow(object):
         self.glayoutQuickButtons.setObjectName("glayoutQuickButtons")
         spacerItem2 = QtWidgets.QSpacerItem(5, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
         self.glayoutQuickButtons.addItem(spacerItem2, 0, 7, 1, 1)
-        self.buttonNext = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonNext.setMinimumSize(QtCore.QSize(20, 18))
-        self.buttonNext.setMaximumSize(QtCore.QSize(20, 18))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.buttonNext.setFont(font)
-        self.buttonNext.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonNext.setText("")
-        self.buttonNext.setObjectName("buttonNext")
-        self.glayoutQuickButtons.addWidget(self.buttonNext, 0, 6, 1, 1)
-        self.buttonTrimSave = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonTrimSave.setMinimumSize(QtCore.QSize(0, 18))
-        self.buttonTrimSave.setMaximumSize(QtCore.QSize(60, 16777215))
-        self.buttonTrimSave.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonTrimSave.setText("Save")
-        self.buttonTrimSave.setObjectName("buttonTrimSave")
-        self.glayoutQuickButtons.addWidget(self.buttonTrimSave, 0, 7, 1, 1)
-        self.buttonMarkDeleted = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonMarkDeleted.setMinimumSize(QtCore.QSize(22, 0))
-        self.buttonMarkDeleted.setMaximumSize(QtCore.QSize(22, 18))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.buttonMarkDeleted.setFont(font)
-        self.buttonMarkDeleted.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonMarkDeleted.setText("❌")
-        self.buttonMarkDeleted.setCheckable(True)
-        self.buttonMarkDeleted.setObjectName("buttonMarkDeleted")
-        self.glayoutQuickButtons.addWidget(self.buttonMarkDeleted, 0, 1, 1, 1)
+        # REMOVED: buttonNext, buttonTrimSave, buttonMarkDeleted
         self.buttonLoop = QtWidgets.QPushButton(self.frameAdvancedControls)
         self.buttonLoop.setMinimumSize(QtCore.QSize(22, 0))
         self.buttonLoop.setMaximumSize(QtCore.QSize(22, 18))
@@ -318,27 +291,7 @@ class Ui_MainWindow(object):
         self.buttonLoop.setCheckable(True)
         self.buttonLoop.setObjectName("buttonLoop")
         self.glayoutQuickButtons.addWidget(self.buttonLoop, 0, 3, 1, 1)
-        self.buttonExploreMediaPath = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonExploreMediaPath.setMinimumSize(QtCore.QSize(22, 0))
-        self.buttonExploreMediaPath.setMaximumSize(QtCore.QSize(22, 18))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.buttonExploreMediaPath.setFont(font)
-        self.buttonExploreMediaPath.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonExploreMediaPath.setText("📂")
-        self.buttonExploreMediaPath.setObjectName("buttonExploreMediaPath")
-        self.glayoutQuickButtons.addWidget(self.buttonExploreMediaPath, 0, 0, 1, 1)
-        self.buttonSnapshot = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonSnapshot.setMinimumSize(QtCore.QSize(22, 0))
-        self.buttonSnapshot.setMaximumSize(QtCore.QSize(22, 18))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.buttonSnapshot.setFont(font)
-        self.buttonSnapshot.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonSnapshot.setText("📷")
-        self.buttonSnapshot.setCheckable(False)
-        self.buttonSnapshot.setObjectName("buttonSnapshot")
-        self.glayoutQuickButtons.addWidget(self.buttonSnapshot, 0, 2, 1, 1)
+        # REMOVED: buttonExploreMediaPath, buttonSnapshot
         self.buttonAutoplay = QtWidgets.QPushButton(self.frameAdvancedControls)
         self.buttonAutoplay.setMinimumSize(QtCore.QSize(22, 0))
         self.buttonAutoplay.setMaximumSize(QtCore.QSize(22, 18))
@@ -352,28 +305,7 @@ class Ui_MainWindow(object):
         self.buttonAutoplay.setCheckable(True)
         self.buttonAutoplay.setObjectName("buttonAutoplay")
         self.glayoutQuickButtons.addWidget(self.buttonAutoplay, 0, 4, 1, 1)
-        self.buttonPrevious = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonPrevious.setMinimumSize(QtCore.QSize(20, 18))
-        self.buttonPrevious.setMaximumSize(QtCore.QSize(20, 18))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.buttonPrevious.setFont(font)
-        self.buttonPrevious.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonPrevious.setText("")
-        self.buttonPrevious.setObjectName("buttonPrevious")
-        self.glayoutQuickButtons.addWidget(self.buttonPrevious, 0, 5, 1, 1)
-        self.lineOutput = QLineEditPassthrough(self.frameAdvancedControls)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineOutput.sizePolicy().hasHeightForWidth())
-        self.lineOutput.setSizePolicy(sizePolicy)
-        self.lineOutput.setMinimumSize(QtCore.QSize(120, 0))
-        self.lineOutput.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.lineOutput.setMaxLength(155)
-        self.lineOutput.setPlaceholderText("Output name")
-        self.lineOutput.setObjectName("lineOutput")
-        self.glayoutQuickButtons.addWidget(self.lineOutput, 1, 0, 1, 8)
+        # REMOVED: buttonPrevious, lineOutput
         self.gridLayout_6.addLayout(self.glayoutQuickButtons, 0, 0, 2, 1)
         self.gridLayout_6.setColumnStretch(0, 1)
         self.advanced_layout.addLayout(self.gridLayout_6, 0, 4, 1, 1)
@@ -793,44 +725,10 @@ class Ui_MainWindow(object):
         self.labelCropBottom.setText(_translate("MainWindow", "B: 0"))
         self.labelCropTop.setText(_translate("MainWindow", "T: 0"))
         self.label_5.setText(_translate("MainWindow", "Crop:"))
-        self.buttonNext.setToolTip(_translate("MainWindow", "Plays the next media file in the current folder.\n"
-"\n"
-"Click: Plays next valid file.\n"
-"Ctrl + click: Plays a random file.\n"
-"Shift + click: Plays next valid file that matches the current mime type (video, audio, or image).\n"
-"Alt + click: Plays a random file that matches the current mime type (video, audio, or image).\n"
-"\n"
-"Right-click for more options."))
-        self.buttonTrimSave.setToolTip(_translate("MainWindow", "Save the trimmed video to a new file."))
-        self.buttonMarkDeleted.setToolTip(_translate("MainWindow", "Mark media for future deletion.\n"
-"0 files are currently marked for deletion.\n"
-"\n"
-"Shortcuts:\n"
-"Shift + click: Show deletion-confirmation prompt.\n"
-"Ctrl + click: Immediately delete current media.\n"
-"\n"
-"Right-click for more options. Deletion-confirmation\n"
-"prompt is shown on exit if any files are marked."))
+        # REMOVED tooltips: buttonNext, buttonTrimSave, buttonMarkDeleted, buttonExploreMediaPath, buttonSnapshot, buttonPrevious, lineOutput
         self.buttonLoop.setToolTip(_translate("MainWindow", "If checked, media loops upon completion — even with autoplay enabled."))
-        self.buttonExploreMediaPath.setToolTip(_translate("MainWindow", "Open media location"))
-        self.buttonSnapshot.setToolTip(_translate("MainWindow", "Takes a snapshot of the current media at its current position.\n"
-"\n"
-"Ctrl + click: Opens size and save-file dialogs for your snapshot.\n"
-"Shift + click: Opens the last snapshot in PyPlayer.\n"
-"Alt + click: Opens the last snapshot in your default program.\n"
-"\n"
-"Right-click for more options."))
         self.buttonAutoplay.setToolTip(_translate("MainWindow", "If checked, the next valid media file in the current folder will\n"
 "automatically play upon completion of the current media."))
-        self.buttonPrevious.setToolTip(_translate("MainWindow", "Plays the previous media file in the current folder.\n"
-"\n"
-"Click: Plays previous valid file.\n"
-"Ctrl + click: Plays a random file.\n"
-"Shift + click: Plays previous valid file that matches the current mime type (video, audio, or image).\n"
-"Alt + click: Plays a random file that matches the current mime type (video, audio, or image).\n"
-"\n"
-"Right-click for more options."))
-        self.lineOutput.setToolTip(_translate("MainWindow", "No media is currently playing."))
         self.buttonTrim.setToolTip(_translate("MainWindow", "Click to set trim start at current position.\n"
 "End is automatically set to video end.\n"
 "\n"
