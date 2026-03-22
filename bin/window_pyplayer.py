@@ -279,33 +279,7 @@ class Ui_MainWindow(object):
         self.glayoutQuickButtons.setObjectName("glayoutQuickButtons")
         spacerItem2 = QtWidgets.QSpacerItem(5, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
         self.glayoutQuickButtons.addItem(spacerItem2, 0, 7, 1, 1)
-        # REMOVED: buttonNext, buttonTrimSave, buttonMarkDeleted
-        self.buttonLoop = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonLoop.setMinimumSize(QtCore.QSize(22, 0))
-        self.buttonLoop.setMaximumSize(QtCore.QSize(22, 18))
-        font = QtGui.QFont()
-        font.setPointSize(11)
-        self.buttonLoop.setFont(font)
-        self.buttonLoop.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonLoop.setText("")
-        self.buttonLoop.setCheckable(True)
-        self.buttonLoop.setObjectName("buttonLoop")
-        self.glayoutQuickButtons.addWidget(self.buttonLoop, 0, 3, 1, 1)
-        # REMOVED: buttonExploreMediaPath, buttonSnapshot
-        self.buttonAutoplay = QtWidgets.QPushButton(self.frameAdvancedControls)
-        self.buttonAutoplay.setMinimumSize(QtCore.QSize(22, 0))
-        self.buttonAutoplay.setMaximumSize(QtCore.QSize(22, 18))
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        font.setBold(False)
-        font.setWeight(50)
-        self.buttonAutoplay.setFont(font)
-        self.buttonAutoplay.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.buttonAutoplay.setText("")
-        self.buttonAutoplay.setCheckable(True)
-        self.buttonAutoplay.setObjectName("buttonAutoplay")
-        self.glayoutQuickButtons.addWidget(self.buttonAutoplay, 0, 4, 1, 1)
-        # REMOVED: buttonPrevious, lineOutput
+        # REMOVED: buttonNext, buttonTrimSave, buttonMarkDeleted, buttonLoop, buttonExploreMediaPath, buttonSnapshot, buttonAutoplay, buttonPrevious, lineOutput
         self.gridLayout_6.addLayout(self.glayoutQuickButtons, 0, 0, 2, 1)
         self.gridLayout_6.setColumnStretch(0, 1)
         self.advanced_layout.addLayout(self.gridLayout_6, 0, 4, 1, 1)
@@ -725,10 +699,7 @@ class Ui_MainWindow(object):
         self.labelCropBottom.setText(_translate("MainWindow", "B: 0"))
         self.labelCropTop.setText(_translate("MainWindow", "T: 0"))
         self.label_5.setText(_translate("MainWindow", "Crop:"))
-        # REMOVED tooltips: buttonNext, buttonTrimSave, buttonMarkDeleted, buttonExploreMediaPath, buttonSnapshot, buttonPrevious, lineOutput
-        self.buttonLoop.setToolTip(_translate("MainWindow", "If checked, media loops upon completion — even with autoplay enabled."))
-        self.buttonAutoplay.setToolTip(_translate("MainWindow", "If checked, the next valid media file in the current folder will\n"
-"automatically play upon completion of the current media."))
+        # REMOVED tooltips: buttonNext, buttonTrimSave, buttonMarkDeleted, buttonLoop, buttonExploreMediaPath, buttonSnapshot, buttonAutoplay, buttonPrevious, lineOutput
         self.buttonTrim.setToolTip(_translate("MainWindow", "Click to set trim start at current position.\n"
 "End is automatically set to video end.\n"
 "\n"

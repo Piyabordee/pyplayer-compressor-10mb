@@ -995,6 +995,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             def setVisible(self, *args): pass
             def setToolTip(self, *args): pass
             def contextMenuEvent(self, *args): pass
+            def setCheckable(self, *args): pass
+            def setText(self, *args): pass
+            def text(self): return ""
 
         # Dummy line edit class with no-op methods
         class DummyLineEdit(QtW.QLineEdit):
@@ -1028,6 +1031,10 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.buttonMarkDeleted.setVisible(False)
         self.buttonSnapshot = DummyPushButton(self)
         self.buttonSnapshot.setVisible(False)
+        self.buttonLoop = DummyPushButton(self)
+        self.buttonLoop.setVisible(False)
+        self.buttonAutoplay = DummyPushButton(self)
+        self.buttonAutoplay.setVisible(False)
         self.buttonPrevious = DummyPushButton(self)
         self.buttonPrevious.setVisible(False)
         self.buttonNext = DummyPushButton(self)
