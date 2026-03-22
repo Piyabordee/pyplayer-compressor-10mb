@@ -5496,6 +5496,17 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         ''' Updates every section of the UI to reflect the
             current `frame`. Clamps playback to desired trims.
             Loops if necessary. Locks spinboxes while updating. '''
+        # When trim is active, update maximum (END) to follow user's seek position
+        if self.buttonTrim.isChecked() and frame > self.minimum:
+            self.maximum = frame
+            # Update button text to show new duration
+            duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
+            h, m, s, ms = get_hms(duration_ms)
+            if duration_ms < 3600:
+                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
+            else:
+                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
+
         if not self.minimum <= frame <= self.maximum:
             if not (self.sliderProgress.grabbing_clamp_minimum or self.sliderProgress.grabbing_clamp_maximum):
                 frame = min(self.maximum, max(self.minimum, frame))
@@ -6080,13 +6091,13 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
 
     def set_trim(self, enabled: bool):
-        ''' Toggle trim mode - set start at current position, end at video end.
+        ''' Toggle trim mode - set start at current position, end at current + 20sec.
 
         When enabled:
             - Start position = current playback position
-            - End position = video end (automatic)
-            - Button displays remaining duration
-            - Slider clamps at minimum (start position)
+            - End position = current position + 20 seconds (follows seek)
+            - Button displays duration between start and end
+            - User can seek to adjust end position
 
         When disabled:
             - Reset to full video playback
@@ -6107,23 +6118,25 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.buttonTrim.blockSignals(False)
 
         self.sliderProgress.clamp_minimum = enabled
-        self.sliderProgress.clamp_maximum = False  # end is always video end
+        # Don't clamp maximum - let user seek freely to set end position
 
         if enabled:
             self.minimum = get_ui_frame()
-            self.maximum = self.sliderProgress.maximum()
+            # Set initial maximum to 20 seconds from now
+            twenty_sec_frames = int(20 * self.frame_rate)
+            self.maximum = min(self.minimum + twenty_sec_frames, self.sliderProgress.maximum())
 
             logging.info(f'>>> set_trim ENABLED: minimum={self.minimum}, maximum={self.maximum}, fps={self.frame_rate}')
 
-            # Calculate and display remaining duration
-            remaining_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
-            h, m, s, ms = get_hms(remaining_ms)
-            if remaining_ms < 3600:
+            # Calculate and display duration
+            duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
+            h, m, s, ms = get_hms(duration_ms)
+            if duration_ms < 3600:
                 new_text = f'{m}:{s:02}.{ms:02}'
             else:
                 new_text = f'{h}:{m:02}:{s:02}'
 
-            logging.info(f'>>> set_trim: remaining_ms={remaining_ms}, button text={new_text}')
+            logging.info(f'>>> set_trim: duration_ms={duration_ms}, button text={new_text}')
             self.buttonTrim.setText(new_text)
         else:
             self.minimum = self.sliderProgress.minimum()
