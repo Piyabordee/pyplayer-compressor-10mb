@@ -113,6 +113,7 @@ def saveConfig(gui, filename: str = None):
     save('move_destinations', gui.move_destinations, delimiter='<|>')
     save('volume', gui.sliderVolume.value())
     save('muted', not gui.sliderVolume.isEnabled())
+    save('auto_compress_after_trim', getattr(gui, 'auto_compress_after_trim', True))
 
     cfg.setSection('settings')
     for group in (gui.trim_mode_action_group, gui.autoplay_direction_group):
