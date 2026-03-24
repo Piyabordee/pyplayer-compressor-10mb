@@ -480,7 +480,7 @@ class CompressProgressDialog(QtW.QDialog):
     def __init__(self, parent, input_path: str):
         super().__init__(parent)
         self.setWindowTitle('Compressing for Discord')
-        self.setModal(True)
+        self.setModal(False)  # Modeless - allows user to move window
         self.setMinimumWidth(400)
 
         layout = QtW.QVBoxLayout(self)
