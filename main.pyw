@@ -7807,12 +7807,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             # Show error dialog
             self._show_compress_error_dialog(error)
 
-            # Clean up partial output file if it exists
-            if os.path.exists(output_path):
-                try:
-                    os.remove(output_path)
-                except Exception as e:
-                    logging.getLogger('main.pyw').warning(f'Failed to remove partial file: {e}')
+            self._cleanup_temp_files(output_path)
 
             return False
 
@@ -7851,6 +7846,17 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             icon=QMessageBox.Warning,
             **self.get_popup_location()
         ).exec()
+
+    def _cleanup_temp_files(self, *paths):
+        '''Clean up temporary files, logging any errors.'''
+        for path in paths:
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                    logging.getLogger('main.pyw').debug(f'Cleaned up temp file: {path}')
+                except Exception as e:
+                    logging.getLogger('main.pyw').warning(f'Failed to cleanup {path}: {e}')
+
 
     def _show_compress_error_dialog(self, error_message: str):
         '''Show dialog when compression fails.'''
