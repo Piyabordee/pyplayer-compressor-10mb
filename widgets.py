@@ -2848,13 +2848,6 @@ class QVideoSlider(QtW.QSlider):
                 # Dragging END marker - update gui.maximum
                 new_max = max(frame, gui.minimum + 1)  # Don't let END pass START
                 gui.maximum = min(gui.sliderProgress.maximum(), new_max)  # Don't go beyond video
-                # Update button text to show new duration
-                duration_ms = (gui.maximum - gui.minimum) * (1000 / gui.frame_rate)
-                h, m, s, ms = get_hms(duration_ms)
-                if duration_ms < 3600:
-                    gui.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
-                else:
-                    gui.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
                 self.update()  # Repaint to show new marker position
             else:
                 # Normal scrubbing - seek within trim range
