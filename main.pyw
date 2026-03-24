@@ -1205,6 +1205,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         # set custom one-off event handlers for various widgets
         self.sliderVolume.keyPressEvent = self.keyPressEvent                 # pass sliderVolume key presses directly to GUI_Instance
         self.sliderVolume.keyReleaseEvent = self.keyReleaseEvent
+        self.sliderVolume.valueChanged.connect(lambda: self.labelVolumePercent.setText(f'{int(self.sliderVolume.value() * self.volume_boost)}%'))
         self.sliderProgress.dragEnterEvent = self.vlc.dragEnterEvent         # reuse player's drag-and-drop code for slider
         self.sliderProgress.dropEvent = self.vlc.dropEvent
         self.dockControls.leaveEvent = self.leaveEvent                       # ensures leaving dockControls hides cursor/controls in fullscreen
@@ -9031,6 +9032,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         elif boost == 1.0:   tooltip = f'{boosted_volume:.0f}%'
         else:                tooltip = f'{boosted_volume:.0f}% ({boost:.1f}x boost)'
         self.sliderVolume.setToolTip(tooltip)
+        self.labelVolumePercent.setText(f'{int(boosted_volume)}%')
 
 
     def refresh_marked_for_deletion_tooltip(self):
