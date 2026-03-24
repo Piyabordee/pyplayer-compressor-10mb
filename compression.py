@@ -109,3 +109,125 @@ def calculate_video_bitrate(duration_seconds: float) -> int:
 
     logger.info(f'Bitrate calculated: {video_bitrate}k for {duration_seconds:.2f}s video')
     return video_bitrate
+
+# ---------------------
+# Main Compression Function
+
+
+def compress_video(
+    ffmpeg_path: str,
+    ffprobe_path: str,
+    input_path: str,
+    output_path: str,
+    progress_callback: Optional[Callable[[int], None]] = None
+) -> Tuple[bool, str]:
+    '''
+    Compress video to ~8.2MB for Discord upload.
+
+    Args:
+        ffmpeg_path: Path to ffmpeg executable
+        ffprobe_path: Path to ffprobe executable
+        input_path: Path to input video file
+        output_path: Path to output compressed video
+        progress_callback: Optional callback(int) for progress updates (0-100)
+
+    Returns:
+        Tuple of (success: bool, error_message: str)
+    '''
+    # Validate FFmpeg
+    if not ffmpeg_path:
+        error = 'FFmpeg path is empty'
+        logger.error(error)
+        return False, error
+
+    if not os.path.exists(input_path):
+        error = f'Input file does not exist: {input_path}'
+        logger.error(error)
+        return False, error
+
+    # Get duration
+    duration = get_video_duration(ffprobe_path, input_path)
+    if duration is None or duration <= 0:
+        error = 'Could not determine video duration'
+        logger.error(error)
+        return False, error
+
+    # Calculate bitrate
+    video_bitrate_kbps = calculate_video_bitrate(duration)
+
+    # Build FFmpeg command
+    cmd = [
+        ffmpeg_path,
+        '-y',  # Overwrite output file
+        '-i', input_path,
+        '-c:v', 'libx264',
+        '-b:v', f'{video_bitrate_kbps}k',
+        '-preset', 'medium',
+        '-vsync', '0',
+        '-c:a', 'aac',
+        '-b:a', f'{AUDIO_BITRATE_KBPS}k',
+        output_path
+    ]
+
+    logger.info(f'Running compression: {input_path} -> {output_path}')
+
+    try:
+        # Run FFmpeg and parse progress
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            startupinfo=constants.STARTUPINFO if constants.IS_WINDOWS else None
+        )
+
+        # Parse stderr for progress (FFmpeg writes progress to stderr)
+        duration_ms = int(duration * 1000)
+        last_progress = 0
+
+        for line in process.stderr:
+            # Parse time from FFmpeg output: "time=00:00:15.23"
+            time_match = re.search(r'time=(\d+):(\d+):(\d+)\.(\d+)', line)
+            if time_match:
+                hours = int(time_match.group(1))
+                minutes = int(time_match.group(2))
+                seconds = int(time_match.group(3))
+                centiseconds = int(time_match.group(4))
+
+                current_ms = (hours * 3600000 + minutes * 60000 +
+                             seconds * 1000 + centiseconds * 10)
+
+                progress = min(100, int((current_ms / duration_ms) * 100))
+
+                # Only update on significant changes
+                if progress > last_progress:
+                    if progress_callback:
+                        progress_callback(progress)
+                    last_progress = progress
+
+        # Wait for process to complete
+        returncode = process.wait()
+
+        if returncode == 0:
+            # Verify output file exists and has reasonable size
+            if os.path.exists(output_path):
+                file_size_mb = os.path.getsize(output_path) / (1024 * 1024)
+                logger.info(f'Compression complete. Output size: {file_size_mb:.2f}MB')
+
+                if progress_callback:
+                    progress_callback(100)
+
+                return True, ''
+            else:
+                error = 'Output file was not created'
+                logger.error(error)
+                return False, error
+        else:
+            error = f'FFmpeg failed with return code {returncode}'
+            logger.error(error)
+            return False, error
+
+    except Exception as e:
+        error = f'Compression error: {str(e)}'
+        logger.error(error)
+        return False, error
