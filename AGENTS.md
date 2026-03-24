@@ -250,35 +250,46 @@ Uses PyInstaller with:
    - Click Trim again to cancel trim
    - Visual feedback: Triangle markers on seek bar show START (left) and END (right) positions
 
+3. **Auto-compress after trim** - Automatic video compression after saving trimmed videos
+   - Settings checkbox to enable/disable auto-compression (config: `auto_compress_after_trim`)
+   - Automatically compresses trimmed videos to target ~10MB using FFmpeg
+   - Progress dialog shows compression status with polling mechanism
+   - Cleanup of temporary files after compression
+   - Modeless dialog allows continued use during compression
+
 **Recent Commits:**
 ```
-23017fd - refactor(ui): remove unused buttons and tooltips from advanced controls
-aa040b7 - refactor(ui): remove unused buttons and tooltips from advanced controls
-d8cc2e6 - refactor(ui): remove unused buttons and add dummy widgets to prevent errors
-6e18a87 - chore: update config.ini with new settings
-09a086e - chore: update .gitignore to include build outputs and temporary files
-dad013b - refactor: remove debug logging from trim implementation
-c021fa7 - feat(widgets): show both START and END markers on seek bar
-7084027 - fix(widgets): prevent START from moving during trim mode
-d1130f7 - fix(trim): lock START position, let END follow playback
-1ca518e - feat(trim): new workflow - start at current, end follows seek
-0d2ccfa - fix(trim): use toggled signal instead of clicked
-92d596a - fix(open): reset buttonTrim instead of buttonTrimStart/End
-92855e4 - docs(readme): update trim workflow description
-4b63acf - docs(AGENTS): document Quick Trim button feature
-3eb5878 - docs(constants): update trim tooltip constant
-eb1e5d3 - refactor(trim): update set_trim_mode for buttonTrim
-b3c7348 - refactor(trim): comment out deprecated set_trim_start/end functions
-ccf48cd - fix(playback): update trim end check for buttonTrim
-064cb41 - fix(save): update trim check for buttonTrim
-9934f57 - refactor(layout): update responsive layout for buttonTrim
-33b082e - refactor(signals): connect buttonTrim signal
-45d9a81 - feat(trim): add set_trim() function for quick trim behavior
-4284c0d - refactor(ui): regenerate window_pyplayer.py with new Trim button
-bc133a6 - refactor(ui): replace Start/End buttons with single Trim button
-0175e8b - docs: Add Quick Trim Button implementation plan
-6b0b4ca - docs: Add Quick Trim Button design spec
-9837194 - docs: Add AGENTS.md for project-specific guidance and architecture overview
+7646912 - fix(ui): make compression dialog modeless
+3642d23 - fix(ui): add saving dialog during polling phase
+f542c1d - fix(compression): use glob pattern to find temp files
+e8a29e3 - fix(compression): fix polling to check correct temp filename
+5af2324 - docs: add auto-compress feature testing documentation
+e0767cd - feat(compression): add temp file cleanup helper
+0542174 - feat(ui): add compression error dialog helpers
+a4be93f - feat(compression): integrate auto-compress into trim save flow
+b92bcda - feat(compression): add _compress_with_progress method
+ded439d - feat(ui): add CompressProgressDialog class
+e51f62c - fix(settings): pass parent to settings dialog creation
+ded7401 - fix(settings): update runtime state when checkbox toggled
+7e7b086 - feat(settings): connect auto-compress checkbox to config
+539ac33 - fix(settings): add missing label text for auto-compress checkbox
+1b045e8 - feat(settings): add auto-compress checkbox to settings dialog
+4888f30 - fix(config): correctly assign auto_compress_after_trim to gui object
+096035b - feat(config): save auto_compress_after_trim setting
+ce346f6 - feat(config): load auto_compress_after_trim setting
+66dec25 - feat(compression): add compress_video function with progress callback
+72ec57f - fix(compression): correct import order for constants module
+1ebda88 - feat(compression): add core compression module with bitrate calculation
+e471d7d - docs: add implementation plan for auto-compress after trim
+30a3a40 - docs: add auto-compress after trim feature design
+a25ae0c - refactor(ui): remove duration display update from video slider functionality
+6091752 - refactor(ui): enhance trim button functionality and streamline save process
+8e10889 - refactor(ui): enhance video slider functionality for improved user interaction
+79c6528 - refactor(ui): override setVisible method to ensure consistent visibility behavior
+75207ca - refactor(ui): update volume slider layout and functionality for improved user experience
+37d0c82 - refactor(ui): remove frameQuickChecks and frameCropInfo from advanced controls layout
+15c5ced - refactor(ui): adjust layout by adding spacers and repositioning elements in advanced controls
+60e6a2f - refactor(ui): remove checkboxes for deleting originals and skipping marked files from UI
 ```
 
 ---
@@ -330,5 +341,5 @@ When working on this codebase:
 
 ---
 
-*Last Updated: 2026-03-22 (Updated with 31 recent commits)*
+*Last Updated: 2026-03-25 (Updated with 31 recent commits)*
 *Generated for: PyPlayer Compressor 0.6.0 beta*
