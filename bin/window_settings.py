@@ -155,6 +155,13 @@ class Ui_settingsDialog(object):
         self.checkContextShowSubmenus.setTristate(True)
         self.checkContextShowSubmenus.setObjectName("checkContextShowSubmenus")
         self.formLayout.setWidget(15, QtWidgets.QFormLayout.SpanningRole, self.checkContextShowSubmenus)
+        self.checkAutoCompress = QtWidgets.QCheckBox(self.tabGeneral)
+        self.checkAutoCompress.setObjectName("checkAutoCompress")
+        self.checkAutoCompress.setToolTip(
+            "Automatically compress trimmed videos to ~8.2MB for Discord upload.\n"
+            "Output will be saved as {filename}_compressed.mp4"
+        )
+        self.formLayout.setWidget(16, QtWidgets.QFormLayout.SpanningRole, self.checkAutoCompress)
         self.label_49 = QtWidgets.QLabel(self.tabGeneral)
         self.label_49.setObjectName("label_49")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_49)
