@@ -1184,7 +1184,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.lineOutput.setProxyWidget(self)                                 # pass output text box's non-essential key events to ourselves
         self.lineOutput.setIgnoredKeys(Qt.Key_Tab)                           # ignore tab presses, we're using them for something else
         self.lineOutput.setIgnoreAll(False)                                  # but DON'T ignore normal stuff (letters, numbers, punctuation)
-        self.checkDeleteOriginal.setCheckState(1)                            # default to partially checked (can't be done in QtDesigner, lol)
+        # checkDeleteOriginal and checkSkipMarked removed from UI
         self.frameAdvancedControls.setDragTarget(self)
         self.frameCropInfo.setVisible(False)                                 # ensure crop info panel is hidden on startup
         self.dialog_settings.checkContextShowSubmenus.setCheckState(1)       # can't make checkboxes default to partially checked in Qt Designer :(
@@ -2362,7 +2362,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         # aliases for the loop
         update_recent_list = settings.checkAutoplayShuffleAddToRecents.isChecked()
-        skip_marked = self.checkSkipMarked.isChecked()
+        skip_marked = False  # checkSkipMarked removed from UI
         marked = self.marked_for_deletion
         is_hidden = file_is_hidden
         locked_files = self.locked_files
@@ -2515,7 +2515,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         else:    file_range = range(current_index, current_index - len(files) - 1, -1)
 
         # aliases for the loop
-        skip_marked = self.checkSkipMarked.isChecked()
+        skip_marked = False  # checkSkipMarked removed from UI
         marked = self.marked_for_deletion
         is_hidden = file_is_hidden
         locked_files = self.locked_files
@@ -4781,7 +4781,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         # what will we do to our output and original files after saving? (NOTE: concatenation will override these)
         open_after_save = None                                  # None means we'll decide after the edit finishes
         explore_after_save = False
-        delete_mode = self.checkDeleteOriginal.checkState()     # 0, 1, or 2 (ultimately ignored if we're replacing `dest`)
+        delete_mode = 0  # checkDeleteOriginal removed from UI (0 = no deletion)
 
         # operation aliases
         op_concat: dict[str] =               operations.get('concatenate', None)    # see `self.concatenate()` for details
@@ -6251,7 +6251,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             open_after_save = cfg.concatenate.open
             explore_after_save = cfg.concatenate.explore
             encode_mode = cfg.concatenate.encode    # ↓ set dialog's delete setting to our own
-            delete_mode = self.checkDeleteOriginal.checkState()
+            delete_mode = 0  # checkDeleteOriginal removed from UI
 
             # reuse last file list (action is disabled until at least one dialog was opened)
             if action is self.actionCatLastDialog:

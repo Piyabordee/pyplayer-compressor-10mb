@@ -609,63 +609,6 @@
                </property>
               </spacer>
              </item>
-             <item>
-              <widget class="QCheckBox" name="checkDeleteOriginal">
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>13</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="toolTip">
-                <string notr="true">Tristate:
-
-Partially checked - videos will be marked
-for deletion after saving an edit.
-
-Fully checked - videos will be immediately
-deleted after successfully saving an edit.
-
-Note: File deletion/recycling
-is dependent on your settings.</string>
-               </property>
-               <property name="text">
-                <string notr="true">Delete originals</string>
-               </property>
-               <property name="tristate">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="checkSkipMarked">
-               <property name="minimumSize">
-                <size>
-                 <width>103</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>13</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="toolTip">
-                <string notr="true">If checked, using the next/previous video buttons will
-skip over files that have been marked for deletion.</string>
-               </property>
-               <property name="text">
-                <string notr="true">Skip marked files</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>

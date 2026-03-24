@@ -202,32 +202,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem1)
-        self.checkDeleteOriginal = QtWidgets.QCheckBox(self.frameQuickChecks)
-        self.checkDeleteOriginal.setMaximumSize(QtCore.QSize(16777215, 13))
-        self.checkDeleteOriginal.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.checkDeleteOriginal.setToolTip("Tristate:\n"
-"\n"
-"Partially checked - videos will be marked\n"
-"for deletion after saving an edit.\n"
-"\n"
-"Fully checked - videos will be immediately\n"
-"deleted after successfully saving an edit.\n"
-"\n"
-"Note: File deletion/recycling\n"
-"is dependent on your settings.")
-        self.checkDeleteOriginal.setText("Delete originals")
-        self.checkDeleteOriginal.setTristate(True)
-        self.checkDeleteOriginal.setObjectName("checkDeleteOriginal")
-        self.verticalLayout_2.addWidget(self.checkDeleteOriginal)
-        self.checkSkipMarked = QtWidgets.QCheckBox(self.frameQuickChecks)
-        self.checkSkipMarked.setMinimumSize(QtCore.QSize(103, 0))
-        self.checkSkipMarked.setMaximumSize(QtCore.QSize(16777215, 13))
-        self.checkSkipMarked.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.checkSkipMarked.setToolTip("If checked, using the next/previous video buttons will\n"
-"skip over files that have been marked for deletion.")
-        self.checkSkipMarked.setText("Skip marked files")
-        self.checkSkipMarked.setObjectName("checkSkipMarked")
-        self.verticalLayout_2.addWidget(self.checkSkipMarked)
         self.gridLayout_6.addWidget(self.frameQuickChecks, 0, 2, 2, 1)
         self.frameCropInfo = QtWidgets.QFrame(self.frameAdvancedControls)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Ignored)
