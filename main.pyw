@@ -6341,6 +6341,15 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             logging.info(f'Step 1: Saving trimmed video to temp: {temp_trimmed}')
             logging.info(f'Step 2: Will compress to: {compressed_output}')
 
+            # Show saving dialog during polling
+            from PyQt5.QtWidgets import QProgressDialog
+            save_dialog = QProgressDialog('Saving trimmed video...', 'Cancel', 0, 0, self)
+            save_dialog.setWindowModality(QtCore.Qt.WindowModal)
+            save_dialog.setWindowTitle('Saving')
+            save_dialog.show()
+            # Keep dialog responsive by processing events
+            save_dialog.setValue(0)
+
             # Step 3: Save the trimmed video to temp location first
             # We use save() which handles all the trim operations
             save_result = self.save(dest=temp_trimmed)
@@ -6376,10 +6385,18 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 elif temp_files:
                     # _temp_temp.mp4 or _temp (2).mp4 exists - save is in progress
                     pass
+
+                # Update dialog to show it's still working
+                QtW.QApplication.processEvents()
+                save_dialog.setValue(1)
+
                 time.sleep(wait_interval)
                 waited += wait_interval
 
+            save_dialog.close()
+
             if not os.path.exists(temp_trimmed):
+                save_dialog.close()
                 show_on_statusbar('Save operation failed or timed out.', 10000)
                 self._reset_trim_mode()
                 self.buttonTrimSave.setVisible(False)
