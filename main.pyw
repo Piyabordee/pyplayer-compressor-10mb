@@ -6359,19 +6359,22 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             waited = 0
 
             while waited < max_wait:
-                # save() uses _temp_temp.mp4 internally, then renames to _temp.mp4 when done
-                # Check for either file during the save process
-                temp_working = temp_trimmed.replace('_temp.mp4', '_temp_temp.mp4')
+                # save() creates a temp file during processing, then renames to final name
+                # Use glob to find any file matching base + _temp* pattern
+                import glob
+                base_without_ext = temp_trimmed.replace('_temp.mp4', '')
+                temp_files = glob.glob(f"{base_without_ext}_temp*")
+
                 if os.path.exists(temp_trimmed):
-                    # File has been renamed from _temp_temp to _temp - save is complete
+                    # Final _temp.mp4 exists - save is complete
                     try:
                         size2 = os.path.getsize(temp_trimmed)
                         if size2 > 0:
                             break
                     except:
                         pass
-                elif os.path.exists(temp_working):
-                    # _temp_temp.mp4 exists - save is in progress, just wait
+                elif temp_files:
+                    # _temp_temp.mp4 or _temp (2).mp4 exists - save is in progress
                     pass
                 time.sleep(wait_interval)
                 waited += wait_interval
