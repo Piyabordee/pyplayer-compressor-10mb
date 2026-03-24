@@ -3581,9 +3581,11 @@ class Ui_settingsDialog(object):
 
     def on_checkAutoCompress_toggled(self, checked: bool):
         '''Handle auto-compress checkbox toggle.'''
-        # Store the value - will be saved when config is saved
-        # The actual gui.auto_compress_after_trim will be synced when config is loaded
-        pass
+        # Update the runtime setting immediately so changes take effect without restart
+        # Access the main window and update its attribute
+        main_window = self.parent()
+        if main_window:
+            main_window.auto_compress_after_trim = checked
 
 
 from widgets import QColorPickerButton, QKeySequenceFlexibleEdit
