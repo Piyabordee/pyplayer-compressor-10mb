@@ -6359,19 +6359,20 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             waited = 0
 
             while waited < max_wait:
+                # save() uses _temp_temp.mp4 internally, then renames to _temp.mp4 when done
+                # Check for either file during the save process
+                temp_working = temp_trimmed.replace('_temp.mp4', '_temp_temp.mp4')
                 if os.path.exists(temp_trimmed):
-                    # File exists - check if it's still being written
-                    # by checking file size stability
+                    # File has been renamed from _temp_temp to _temp - save is complete
                     try:
-                        size1 = os.path.getsize(temp_trimmed)
-                        time.sleep(1)  # Wait 1 second
-                        if os.path.exists(temp_trimmed):
-                            size2 = os.path.getsize(temp_trimmed)
-                            if size1 == size2 and size2 > 0:
-                                # File size is stable - save is complete
-                                break
+                        size2 = os.path.getsize(temp_trimmed)
+                        if size2 > 0:
+                            break
                     except:
                         pass
+                elif os.path.exists(temp_working):
+                    # _temp_temp.mp4 exists - save is in progress, just wait
+                    pass
                 time.sleep(wait_interval)
                 waited += wait_interval
 
