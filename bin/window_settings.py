@@ -2453,6 +2453,7 @@ class Ui_settingsDialog(object):
 "\n"
 "Note: Shift-right-clicking the player will always show the full menu."))
         self.checkContextShowSubmenus.setText(_translate("settingsDialog", "Show menubar\'s submenus in context menu (tristate)"))
+        self.checkAutoCompress.setText(_translate("settingsDialog", "Auto-compress trimmed videos for Discord"))
         self.label_49.setToolTip(_translate("settingsDialog", "The format to use for setting the title of the window. The\n"
 "following variables are replaced with their corresponding values:\n"
 "\n"
