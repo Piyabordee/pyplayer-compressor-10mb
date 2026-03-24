@@ -6275,16 +6275,145 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
     def save_from_trim_button(self):
         ''' Called when clicking Save As button after exiting trim mode.
-            Opens save dialog and resets trim mode after completion. '''
-        # Open "Save As" dialog
-        result = self.save_as(
-            noun='trimmed media',
-            filter='MP4 files (*.mp4);;All files (*)',
+            Opens save dialog and resets trim mode after completion.
+            If auto_compress_after_trim is enabled, compresses the output. '''
+        import os
+
+        # Check if auto-compress is enabled
+        auto_compress = getattr(config.cfg, 'auto_compress_after_trim', False)
+
+        if not auto_compress:
+            # Use normal save flow if auto-compress is disabled
+            result = self.save_as(
+                noun='trimmed media',
+                filter='MP4 files (*.mp4);;All files (*)',
+                valid_extensions=('.mp4',),
+                ext_hint='.mp4'
+            )
+
+            # After save_as dialog (whether saved or cancelled), reset everything
+            self._reset_trim_mode()
+            self.buttonTrimSave.setVisible(False)
+            return
+
+        # Auto-compress is enabled - use custom two-step flow
+        video = self.video
+        if not video:
+            show_on_statusbar('No media is playing.', 10000)
+            self._reset_trim_mode()
+            self.buttonTrimSave.setVisible(False)
+            return
+
+        if not self.is_safe_to_edit(video):
+            show_on_statusbar('Save cancelled (source media is set to be overwritten).', 10000)
+            self._reset_trim_mode()
+            self.buttonTrimSave.setVisible(False)
+            return
+
+        # Step 1: Open save dialog to get the base output path
+        default_path, _, _ = self.get_output(
             valid_extensions=('.mp4',),
             ext_hint='.mp4'
         )
 
-        # After save_as dialog (whether saved or cancelled), reset everything
+        try:
+            logging.info('Opening \'Save As...\' dialog for auto-compression.')
+            base_output = self.browse_for_save_file(
+                noun='trimmed media',
+                filter='MP4 files (*.mp4);;All files (*)',
+                valid_extensions=('.mp4',),
+                ext_hint='.mp4',
+                default_path=default_path or video,
+                unique_default=True
+            )
+
+            if not base_output:
+                # User cancelled - reset trim mode
+                self._reset_trim_mode()
+                self.buttonTrimSave.setVisible(False)
+                return
+
+            # Step 2: Prepare paths for two-step process
+            base, ext = os.path.splitext(base_output)
+            compressed_output = f"{base}_compressed{ext}"
+            temp_trimmed = add_path_suffix(base_output, '_temp', unique=True)
+
+            logging.info(f'Step 1: Saving trimmed video to temp: {temp_trimmed}')
+            logging.info(f'Step 2: Will compress to: {compressed_output}')
+
+            # Step 3: Save the trimmed video to temp location first
+            # We use save() which handles all the trim operations
+            save_result = self.save(dest=temp_trimmed)
+
+            if not save_result:
+                # Save was cancelled or failed
+                self._reset_trim_mode()
+                self.buttonTrimSave.setVisible(False)
+                return
+
+            # Step 4: Wait for save thread to complete by polling for file
+            # This is a simple approach - in production you might want a more robust mechanism
+            import time
+            max_wait = 600  # 10 minutes max wait for large videos
+            wait_interval = 0.5  # Check every 0.5 seconds
+            waited = 0
+
+            while waited < max_wait:
+                if os.path.exists(temp_trimmed):
+                    # File exists - check if it's still being written
+                    # by checking file size stability
+                    try:
+                        size1 = os.path.getsize(temp_trimmed)
+                        time.sleep(1)  # Wait 1 second
+                        if os.path.exists(temp_trimmed):
+                            size2 = os.path.getsize(temp_trimmed)
+                            if size1 == size2 and size2 > 0:
+                                # File size is stable - save is complete
+                                break
+                    except:
+                        pass
+                time.sleep(wait_interval)
+                waited += wait_interval
+
+            if not os.path.exists(temp_trimmed):
+                show_on_statusbar('Save operation failed or timed out.', 10000)
+                self._reset_trim_mode()
+                self.buttonTrimSave.setVisible(False)
+                return
+
+            # Step 5: Compress the trimmed video
+            logging.info(f'Compressing trimmed video to: {compressed_output}')
+            success = self._compress_with_progress(
+                input_path=temp_trimmed,
+                output_path=compressed_output
+            )
+
+            # Step 6: Clean up temp trimmed file
+            try:
+                if os.path.exists(temp_trimmed):
+                    os.remove(temp_trimmed)
+                    logging.info(f'Cleaned up temp file: {temp_trimmed}')
+            except Exception as e:
+                logging.warning(f'Failed to remove temp file {temp_trimmed}: {e}')
+
+            if not success:
+                # Compression failed - reset trim mode
+                self._reset_trim_mode()
+                self.buttonTrimSave.setVisible(False)
+                return
+
+            # Step 7: Success! Show status and open the compressed file
+            logging.info(f'Successfully trimmed and compressed: {compressed_output}')
+            show_on_statusbar(f'Trimmed and compressed: {os.path.basename(compressed_output)}', 5000)
+
+            # Open the compressed file
+            self.open_media(compressed_output)
+
+        except Exception as e:
+            logging.getLogger('main.pyw').error(f'Error in save_from_trim_button with auto-compress: {e}')
+            show_on_statusbar(f'Auto-compress failed: {str(e)}', 10000)
+
+        # Finally, reset trim mode
         self._reset_trim_mode()
         self.buttonTrimSave.setVisible(False)
 
