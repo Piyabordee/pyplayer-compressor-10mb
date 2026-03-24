@@ -405,7 +405,8 @@ def connect_widget_signals(self: QtW.QMainWindow):
     self.spinFrame.valueStepped.connect(self.update_frame_spin)
 
     self.buttonTrim.toggled.connect(lambda checked: self.set_trim(checked))
-    self.buttonTrimSave.clicked.connect(self.save)
+    self.buttonTrimSave.clicked.connect(self.save_from_trim_button)
+    self.setup_trim_button_custom_handler()
     self.buttonNext.clicked.connect(self.handle_cycle_buttons)
     self.buttonPrevious.clicked.connect(lambda: self.handle_cycle_buttons(next=False))
     self.buttonExploreMediaPath.clicked.connect(self.actionExploreMediaPath.trigger)

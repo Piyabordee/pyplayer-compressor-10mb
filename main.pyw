@@ -5566,13 +5566,6 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         # But minimum (START) stays locked at where Trim was clicked
         if self.buttonTrim.isChecked() and frame > self.maximum:
             self.maximum = frame
-            # Update button text to show new duration
-            duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
-            h, m, s, ms = get_hms(duration_ms)
-            if duration_ms < 3600:
-                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
-            else:
-                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
 
         # Allow playback beyond minimum - START is locked, but playback continues
         # Only stop if we reach the actual end of video
@@ -6158,15 +6151,17 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
     def set_trim(self, enabled: bool):
         ''' Toggle trim mode - set start at current position, end at current + 20sec.
 
-        When enabled:
-            - Start position = current playback position
-            - End position = current position + 20 seconds (follows seek)
-            - Button displays duration between start and end
-            - User can seek to adjust end position
+        Simple workflow:
+            1. First click (enabled=True):
+               - Enter trim mode
+               - Start = current position, End = +20 seconds
+               - Button shows "Save As" immediately
+               - User can drag START/END markers to adjust
 
-        When disabled:
-            - Reset to full video playback
-            - Button text returns to "Trim"
+            2. Click "Save As" (either Trim button or Save As button):
+               - Opens "Save As" dialog
+               - Saves the trimmed video
+               - Resets to full video playback
         '''
         if not self.video:
             return
@@ -6190,17 +6185,39 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             twenty_sec_frames = int(20 * self.frame_rate)
             self.maximum = min(self.minimum + twenty_sec_frames, self.sliderProgress.maximum())
 
-            # Calculate and display duration
-            duration_ms = (self.maximum - self.minimum) * (1000 / self.frame_rate)
-            h, m, s, ms = get_hms(duration_ms)
-            if duration_ms < 3600:
-                self.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
-            else:
-                self.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
+            # Show "Save As" immediately - no duration display
+            self.buttonTrim.setText('Save As')
+            # Show the Save As button in advanced controls
+            self.buttonTrimSave.setVisible(True)
         else:
-            self.minimum = self.sliderProgress.minimum()
-            self.maximum = self.sliderProgress.maximum()
-            self.buttonTrim.setText('Trim')
+            self._reset_trim_mode()
+
+
+    def _reset_trim_mode(self):
+        ''' Reset trim mode to default state (full range, button text). '''
+        self.minimum = self.sliderProgress.minimum()
+        self.maximum = self.sliderProgress.maximum()
+        self.buttonTrim.setText('Trim')
+        self.buttonTrim.setChecked(False)
+        self.sliderProgress.clamp_minimum = False
+        self.sliderProgress.clamp_maximum = False
+        self.buttonTrimSave.setVisible(False)
+
+
+    def save_from_trim_button(self):
+        ''' Called when clicking Save As button after exiting trim mode.
+            Opens save dialog and resets trim mode after completion. '''
+        # Open "Save As" dialog
+        result = self.save_as(
+            noun='trimmed media',
+            filter='MP4 files (*.mp4);;All files (*)',
+            valid_extensions=('.mp4',),
+            ext_hint='.mp4'
+        )
+
+        # After save_as dialog (whether saved or cancelled), reset everything
+        self._reset_trim_mode()
+        self.buttonTrimSave.setVisible(False)
 
 
     def set_trim_mode(self, action: QtW.QAction):
@@ -9079,6 +9096,28 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         elif mod & Qt.ShiftModifier:   self.snapshot_actions[settings.comboSnapshotShift.currentIndex()][0]()
         elif mod & Qt.ControlModifier: self.snapshot_actions[settings.comboSnapshotCtrl.currentIndex()][0]()
         elif mod & Qt.AltModifier:     self.snapshot_actions[settings.comboSnapshotAlt.currentIndex()][0]()
+
+
+    def setup_trim_button_custom_handler(self):
+        ''' Install custom event filter on Trim button to handle clicks
+            when button is checked (in trim mode) - prevents toggle off,
+            directly triggers save instead. '''
+        class TrimButtonEventFilter(QtCore.QObject):
+            def __init__(self, parent_window):
+                super().__init__(parent_window)
+                self.parent = parent_window
+
+            def eventFilter(self, obj, event):
+                if event.type() == QtCore.QEvent.MouseButtonRelease:
+                    # If button is checked (in trim mode), clicking it should save, not toggle off
+                    if obj.isChecked():
+                        # Handle save click, prevent toggle
+                        self.parent.save_from_trim_button()
+                        return True  # Event handled, don't pass to button
+                return False  # Let other events pass through
+
+        self.trim_button_filter = TrimButtonEventFilter(self)
+        self.buttonTrim.installEventFilter(self.trim_button_filter)
 
 
     def refresh_taskbar(self):
