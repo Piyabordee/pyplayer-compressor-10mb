@@ -7628,6 +7628,85 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         finally: cfg.trimmodeselected = True                    # set this to True no matter what (_save is waiting on this)
 
 
+    def _compress_with_progress(self, input_path: str, output_path: str) -> bool:
+        '''
+        Show progress dialog and compress video for Discord.
+
+        Args:
+            input_path: Path to input video file
+            output_path: Path to output compressed video
+
+        Returns:
+            True if compression succeeded, False otherwise
+        '''
+        import compression
+
+        # Verify FFmpeg is available
+        if not constants.FFMPEG:
+            from PyQt5.QtWidgets import QMessageBox
+            qthelpers.getPopupOk(
+                title='FFmpeg Required',
+                text='Auto-compress requires FFmpeg to be installed.',
+                textInformative='Please install FFmpeg or disable auto-compress in settings.',
+                icon=QMessageBox.Warning,
+                **self.get_popup_location()
+            ).exec()
+            return False
+
+        # Verify FFprobe is available (optional but recommended)
+        ffprobe = constants.FFPROBE if constants.FFPROBE else ''
+
+        # Create and show progress dialog
+        dialog = CompressProgressDialog(self, input_path)
+        dialog.show()
+
+        # Progress callback using Qt's thread-safe method
+        def progress_callback(percent: int):
+            QtCore.QMetaObject.invokeMethod(
+                dialog.progressBar,
+                'setValue',
+                QtCore.Qt.QueuedConnection,
+                QtCore.Q_ARG(int, percent)
+            )
+
+        # Run compression
+        success, error = compression.compress_video(
+            ffmpeg_path=constants.FFMPEG,
+            ffprobe_path=ffprobe,
+            input_path=input_path,
+            output_path=output_path,
+            progress_callback=progress_callback
+        )
+
+        # Close dialog
+        dialog.close()
+
+        if not success:
+            # Show error dialog
+            from PyQt5.QtWidgets import QMessageBox
+            qthelpers.getPopupOk(
+                title='Compression Failed',
+                text=f'Failed to compress video for Discord.',
+                textInformative=f'Error: {error}\n\nTry disabling auto-compress in settings.',
+                icon=QMessageBox.Critical,
+                **self.get_popup_location()
+            ).exec()
+
+            # Clean up partial output file if it exists
+            if os.path.exists(output_path):
+                try:
+                    os.remove(output_path)
+                except Exception as e:
+                    logging.getLogger('main.pyw').warning(f'Failed to remove partial file: {e}')
+
+            return False
+
+        # Success notification
+        logging.getLogger('main.pyw').info(f'Compressed video saved: {output_path}')
+
+        return True
+
+
     def show_delete_prompt(self, *, exiting: bool = False) -> QtW.QDialogButtonBox.StandardButton:
         ''' Generates a dialog for deleting marked files. Dialog consists of
             a `QScrollArea` containing a `QCheckBox` for each file (each with
