@@ -992,7 +992,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             def setIcon(self, *args): pass
             def setChecked(self, *args): pass
             def isChecked(self): return False
-            def setVisible(self, *args): pass
+            def setVisible(self, *args): super().setVisible(False)
             def setToolTip(self, *args): pass
             def contextMenuEvent(self, *args): pass
             def setCheckable(self, *args): pass
@@ -1022,7 +1022,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             def setText(self, text): self._text = text
             def text(self): return self._text
             def height(self): return 18
-            def setVisible(self, *args): pass
+            def setVisible(self, *args): super().setVisible(False)
             def hasFocus(self): return False
 
         self.buttonExploreMediaPath = DummyPushButton(self)
