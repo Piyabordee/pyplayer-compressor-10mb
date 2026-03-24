@@ -7772,14 +7772,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         # Verify FFmpeg is available
         if not constants.FFMPEG:
-            from PyQt5.QtWidgets import QMessageBox
-            qthelpers.getPopupOk(
-                title='FFmpeg Required',
-                text='Auto-compress requires FFmpeg to be installed.',
-                textInformative='Please install FFmpeg or disable auto-compress in settings.',
-                icon=QMessageBox.Warning,
-                **self.get_popup_location()
-            ).exec()
+            self._show_ffmpeg_missing_dialog()
             return False
 
         # Verify FFprobe is available (optional but recommended)
@@ -7812,14 +7805,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         if not success:
             # Show error dialog
-            from PyQt5.QtWidgets import QMessageBox
-            qthelpers.getPopupOk(
-                title='Compression Failed',
-                text=f'Failed to compress video for Discord.',
-                textInformative=f'Error: {error}\n\nTry disabling auto-compress in settings.',
-                icon=QMessageBox.Critical,
-                **self.get_popup_location()
-            ).exec()
+            self._show_compress_error_dialog(error)
 
             # Clean up partial output file if it exists
             if os.path.exists(output_path):
@@ -7834,6 +7820,49 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         logging.getLogger('main.pyw').info(f'Compressed video saved: {output_path}')
 
         return True
+
+
+    def _show_ffmpeg_missing_dialog(self):
+        '''Show dialog when FFmpeg is not available for compression.'''
+        from PyQt5.QtWidgets import QMessageBox
+
+        qthelpers.getPopupOk(
+            title='FFmpeg Required',
+            text='Auto-compress requires FFmpeg, which was not detected.',
+            textInformative=(
+                'Please install FFmpeg or disable auto-compress in settings.\n\n'
+                'FFmpeg is used for video compression.'
+            ),
+            icon=QMessageBox.Warning,
+            **self.get_popup_location()
+        ).exec()
+
+    def _show_duration_error_dialog(self):
+        '''Show dialog when video duration cannot be determined.'''
+        from PyQt5.QtWidgets import QMessageBox
+
+        qthelpers.getPopupOk(
+            title='Compression Error',
+            text='Could not determine video duration.',
+            textInformative=(
+                'This is required for calculating the compression bitrate.\n\n'
+                'Please try disabling auto-compress in settings or report this issue.'
+            ),
+            icon=QMessageBox.Warning,
+            **self.get_popup_location()
+        ).exec()
+
+    def _show_compress_error_dialog(self, error_message: str):
+        '''Show dialog when compression fails.'''
+        from PyQt5.QtWidgets import QMessageBox
+
+        qthelpers.getPopupOk(
+            title='Compression Failed',
+            text='An error occurred while compressing the video.',
+            textInformative=f'Error: {error_message}\n\nYour trimmed video was not saved.',
+            icon=QMessageBox.Critical,
+            **self.get_popup_location()
+        ).exec()
 
 
     def show_delete_prompt(self, *, exiting: bool = False) -> QtW.QDialogButtonBox.StandardButton:
