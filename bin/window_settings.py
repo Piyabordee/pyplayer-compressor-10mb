@@ -2183,6 +2183,7 @@ class Ui_settingsDialog(object):
         self.buttonBox.rejected.connect(settingsDialog.reject) # type: ignore
         self.checkHideIdleCursor.toggled['bool'].connect(self.spinHideIdleCursorDuration.setEnabled) # type: ignore
         self.checkLoadCoverArt.toggled['bool'].connect(self.checkShowCoverArt.setEnabled) # type: ignore
+        self.checkAutoCompress.toggled.connect(settingsDialog.on_checkAutoCompress_toggled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(settingsDialog)
         settingsDialog.setTabOrder(self.comboThemes, self.buttonRefreshThemes)
         settingsDialog.setTabOrder(self.buttonRefreshThemes, self.lineWindowTitleFormat)
@@ -3577,6 +3578,14 @@ class Ui_settingsDialog(object):
         self.checkAutoUpdateCheck.setText(_translate("settingsDialog", "Auto-check for updates"))
         self.labelGithub.setText(_translate("settingsDialog", "You can manually check the latest releases on Github <a href=\"?url\">here</a>."))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabUpdates), _translate("settingsDialog", "&Updates"))
+
+    def on_checkAutoCompress_toggled(self, checked: bool):
+        '''Handle auto-compress checkbox toggle.'''
+        # Store the value - will be saved when config is saved
+        # The actual gui.auto_compress_after_trim will be synced when config is loaded
+        pass
+
+
 from widgets import QColorPickerButton, QKeySequenceFlexibleEdit
 
 

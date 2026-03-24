@@ -60,6 +60,9 @@ def loadConfig(gui, filename: str = constants.CONFIG_PATH) -> ConfigParseBetterQ
 
     cfg.setSection('settings')
     cfg.loadQt(settings.tabGeneral, settings.tabEditing, settings.tabHotkeys, settings.tabUpdates, ignore=('comboThemes'))
+    # Sync the auto-compress checkbox with the GUI's auto_compress_after_trim setting
+    if hasattr(settings, 'checkAutoCompress'):
+        gui.auto_compress_after_trim = settings.checkAutoCompress.isChecked()
     for group in (gui.trim_mode_action_group, gui.autoplay_direction_group):
         for action in group.actions():
             action.setChecked(load(action.objectName(), action.isChecked()))

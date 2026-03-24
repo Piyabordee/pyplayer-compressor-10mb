@@ -9412,6 +9412,10 @@ if __name__ == "__main__":
         qtstart.connect_widget_signals(gui)             # connect signals and slots
         cfg = widgets.cfg = config.loadConfig(gui)      # create and load config (uses constants.CONFIG_PATH)
 
+        # Ensure auto-compress setting is synced between config and settings checkbox
+        if hasattr(settings, 'checkAutoCompress'):
+            gui.auto_compress_after_trim = settings.checkAutoCompress.isChecked()
+
         if not qtstart.args.minimized:                  # show UI
             gui.show()
         else:
