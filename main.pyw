@@ -1185,8 +1185,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.lineOutput.setIgnoredKeys(Qt.Key_Tab)                           # ignore tab presses, we're using them for something else
         self.lineOutput.setIgnoreAll(False)                                  # but DON'T ignore normal stuff (letters, numbers, punctuation)
         # checkDeleteOriginal and checkSkipMarked removed from UI
+        # frameCropInfo removed from UI (gridLayout_6 removed)
         self.frameAdvancedControls.setDragTarget(self)
-        self.frameCropInfo.setVisible(False)                                 # ensure crop info panel is hidden on startup
+        # self.frameCropInfo.setVisible(False)                                 # ensure crop info panel is hidden on startup
         self.dialog_settings.checkContextShowSubmenus.setCheckState(1)       # can't make checkboxes default to partially checked in Qt Designer :(
         for spin in (self.spinHour, self.spinMinute, self.spinSecond, self.spinFrame):
             spin.setProxyWidget(self)
@@ -1764,11 +1765,14 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
     def dockControlsResizeEvent(self, event: QtGui.QResizeEvent):
         ''' Makes UI controls more compact as their size shrinks. '''
         width = event.size().width()
-        self.frameQuickChecks.setVisible((not self.actionCrop.isChecked() and width >= 568) or width >= 800)
-        self.frameCropInfo.setVisible(self.actionCrop.isChecked() and width >= 621)
+        # frameQuickChecks and frameCropInfo removed from UI (gridLayout_6 removed)
+        # self.frameQuickChecks.setVisible((not self.actionCrop.isChecked() and width >= 568) or width >= 800)
+        # self.frameCropInfo.setVisible(self.actionCrop.isChecked() and width >= 621)
         self.lineOutput.setMinimumWidth(10 if width <= 380 else 120)                # reduce output lineEdit (but retain usability)
-        self.advancedControlsLine.setVisible(width >= 357)                          # hide aesthetic line-separator
-        self.glayoutQuickButtons.setHorizontalSpacing(2 if width <= 394 else 6)     # reduce spacing between buttons
+        # advancedControlsLine removed from UI
+        # self.advancedControlsLine.setVisible(width >= 357)                          # hide aesthetic line-separator
+        # glayoutQuickButtons removed from UI (gridLayout_6 removed)
+        # self.glayoutQuickButtons.setHorizontalSpacing(2 if width <= 394 else 6)     # reduce spacing between buttons
         self.buttonTrim.setMinimumWidth(32 if width <= 347 else 44)
 
         # hide or restore trim/toolbar buttons
@@ -8588,8 +8592,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 width = self.width()
                 vlc.update_crop_frames()                                            # update crop frames and factored points
                 vlc.refresh_crop_cursor(vlc.mapFromGlobal(QtGui.QCursor.pos()))     # set appropriate cropping cursor
-                self.frameCropInfo.setVisible(width >= 621)                         # show crop info panel if there's space
-                self.frameQuickChecks.setVisible(width >= 800)                      # hide checkmarks if there's no space
+                # frameCropInfo and frameQuickChecks removed from UI (gridLayout_6 removed)
+                # self.frameCropInfo.setVisible(width >= 621)                         # show crop info panel if there's space
+                # self.frameQuickChecks.setVisible(width >= 800)                      # hide checkmarks if there's no space
                 if self.underMouse():                                               # unhide/lock ui if we're over the window
                     self.vlc.idle_timeout_time = 0.0
         except:
@@ -8604,8 +8609,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         image_player.update()                                   # repaint gifPlayer to fix background
         self.vlc.dragging = None                                # clear crop-drag
         self.vlc.panning = False                                # clear crop-pan
-        self.frameCropInfo.setVisible(False)                    # hide crop info panel
-        self.frameQuickChecks.setVisible(self.width() >= 568)   # show checkmarks if there's space
+        # frameCropInfo and frameQuickChecks removed from UI (gridLayout_6 removed)
+        # self.frameCropInfo.setVisible(False)                    # hide crop info panel
+        # self.frameQuickChecks.setVisible(self.width() >= 568)   # show checkmarks if there's space
         if settings.checkHideIdleCursor.isChecked():            # start hiding the cursor/UI right away if possible
             self.vlc.idle_timeout_time = 1.0                    # 0 locks the UI, so set it to 1
 
