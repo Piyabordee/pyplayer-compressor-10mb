@@ -1046,7 +1046,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)             # this allows easier clicking off of lineEdits
         self.save_progress_bar = QtW.QProgressBar(self.statusbar)
-        self.dialog_settings = qthelpers.getDialogFromUiClass(Ui_settingsDialog, flags=Qt.WindowStaysOnTopHint)
+        self.dialog_settings = qthelpers.getDialogFromUiClass(Ui_settingsDialog, parent=self, flags=Qt.WindowStaysOnTopHint)
         if not constants.IS_WINDOWS:                                # settings dialog was designed around Windows UI
             self.dialog_settings.resize(self.dialog_settings.tabWidget.sizeHint().width() + 32,
                                         self.dialog_settings.height())
