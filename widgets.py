@@ -2794,8 +2794,6 @@ class QVideoSlider(QtW.QSlider):
         if event.button() == Qt.LeftButton:
             pos = event.pos()
             frame = self.pixelPosToRangeValue(pos)
-            if gui.minimum < frame < gui.maximum:
-                gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
             self.scrub_start_frame = frame
 
             # https://stackoverflow.com/questions/40100733/finding-if-a-qpolygon-contains-a-qpoint-not-giving-expected-results
@@ -2807,10 +2805,19 @@ class QVideoSlider(QtW.QSlider):
                     min_pos = self.rangeValueToPixelPos(gui.minimum)
                     if min_pos - radius < pos.x() < min_pos + radius:
                         self.grabbing_clamp_minimum = True
+                        return  # Don't seek if grabbing START marker
                 if self.clamp_maximum:
                     max_pos = self.rangeValueToPixelPos(gui.maximum)
                     if max_pos - radius < pos.x() < max_pos + radius:
                         self.grabbing_clamp_maximum = True
+                        return  # Don't seek if grabbing END marker
+
+            # Normal seek behavior (not grabbing trim markers)
+            if gui.minimum < frame < gui.maximum:
+                gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
+            elif gui.buttonTrim.isChecked() and frame >= gui.minimum and frame <= gui.sliderProgress.maximum():
+                # In trim mode, also allow clicking between START and video end
+                gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
             #if abs(delta) > 0.025:                             # only change if difference between new/old positions is greater than 2.5%
             #    self.setValue(new_value)
 
@@ -2830,20 +2837,29 @@ class QVideoSlider(QtW.QSlider):
             frame = self.pixelPosToRangeValue(event.pos())      # get frame
             gui.player.set_pause(True)                          # pause player while scrubbing
             gui.gifPlayer.gif.setPaused(True)                   # pause GIF player while scrubbing
-            # New Quick Trim: START is locked when Trim button is clicked
-            # User can seek freely, don't allow dragging to change START
-            if gui.buttonTrim.isChecked():
-                # When trim is active, allow seeking to update END
-                # But START stays locked
-                gui.player.set_and_update_progress(frame, SetProgressContext.SCRUB)
+
+            # Handle dragging trim markers
+            if self.grabbing_clamp_minimum:
+                # Dragging START marker - update gui.minimum
+                new_min = min(frame, gui.maximum - 1)  # Don't let START pass END
+                gui.minimum = max(0, new_min)  # Don't go below 0
+                self.update()  # Repaint to show new marker position
             elif self.grabbing_clamp_maximum:
-                gui.player.set_and_update_progress(frame, SetProgressContext.SCRUB)
-                gui.player.set_and_update_progress(min(gui.maximum, max(gui.minimum, frame)), SetProgressContext.SCRUB)
-            elif self.grabbing_clamp_minimum:
-                gui.player.set_and_update_progress(frame, SetProgressContext.SCRUB)
-                gui.minimum = frame
+                # Dragging END marker - update gui.maximum
+                new_max = max(frame, gui.minimum + 1)  # Don't let END pass START
+                gui.maximum = min(gui.sliderProgress.maximum(), new_max)  # Don't go beyond video
+                # Update button text to show new duration
+                duration_ms = (gui.maximum - gui.minimum) * (1000 / gui.frame_rate)
+                h, m, s, ms = get_hms(duration_ms)
+                if duration_ms < 3600:
+                    gui.buttonTrim.setText(f'{m}:{s:02}.{ms:02}')
+                else:
+                    gui.buttonTrim.setText(f'{h}:{m:02}:{s:02}')
+                self.update()  # Repaint to show new marker position
             else:
-                gui.player.set_and_update_progress(min(gui.maximum, max(gui.minimum, frame)), SetProgressContext.SCRUB)
+                # Normal scrubbing - seek within trim range
+                clamped_frame = min(gui.maximum, max(gui.minimum, frame))
+                gui.player.set_and_update_progress(clamped_frame, SetProgressContext.SCRUB)
             self.last_mouseover_time = 0                        # reset last mouseover time to stop drawing timestamp immediately
             self.scrubbing = True                               # mark that we're scrubbing
 
@@ -2854,14 +2870,19 @@ class QVideoSlider(QtW.QSlider):
 
         just_restarted = False
         frame = self.pixelPosToRangeValue(event.pos())          # get frame
-        if frame < gui.minimum:   gui.player.set_and_update_progress(gui.minimum, SetProgressContext.RESET_TO_MIN)
-        elif frame > gui.maximum: gui.player.set_and_update_progress(gui.maximum, SetProgressContext.RESET_TO_MAX)
+
+        # Handle releasing trim markers
+        if self.grabbing_clamp_minimum or self.grabbing_clamp_maximum:
+            # Released trim marker - just clear the grab flags
+            pass  # Marker already updated in mouseMoveEvent
         elif self.scrubbing:
+            # Normal scrubbing
             if frame == gui.frame_count:
                 just_restarted = True
                 gui.restart()
             else:
-                gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
+                clamped_frame = min(gui.maximum, max(gui.minimum, frame))
+                gui.player.set_and_update_progress(clamped_frame, SetProgressContext.NAVIGATION_EXACT)
 
         if not just_restarted:                                  # do not touch pause state if we manually restarted
             if gui.restarted:

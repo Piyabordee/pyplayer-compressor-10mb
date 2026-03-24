@@ -6179,7 +6179,10 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         self.buttonTrim.blockSignals(False)
 
         self.sliderProgress.clamp_minimum = enabled
-        # Don't clamp maximum - let user seek freely to set end position
+        self.sliderProgress.clamp_maximum = enabled  # Allow dragging END marker too
+        # Ensure slider remains enabled and can receive mouse events
+        self.sliderProgress.setEnabled(True)
+        self.sliderProgress.setAttribute(Qt.WA_TransparentForMouseEvents, False)
 
         if enabled:
             self.minimum = get_ui_frame()
