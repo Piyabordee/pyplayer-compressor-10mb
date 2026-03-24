@@ -10,6 +10,8 @@ import os
 import re
 from typing import Callable, Optional, Tuple
 
+import constants
+
 logger = logging.getLogger('compression.py')
 
 # ---------------------
@@ -107,7 +109,3 @@ def calculate_video_bitrate(duration_seconds: float) -> int:
 
     logger.info(f'Bitrate calculated: {video_bitrate}k for {duration_seconds:.2f}s video')
     return video_bitrate
-
-
-# Import constants at module level for STARTUPINFO
-import constants
