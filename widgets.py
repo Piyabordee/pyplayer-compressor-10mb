@@ -432,7 +432,7 @@ class PlayerVLC(PyPlayerBackend):
         super().enable()
 
         # setup VLC instance
-        logger.info(f'VLC arguments: {qtstart.args.vlc}')
+        logger.debug(f'VLC arguments: {qtstart.args.vlc}')
         self._instance = vlc.Instance(qtstart.args.vlc)     # VLC arguments can be passed through the --vlc argument
         player = self._player = self._instance.media_player_new()
         event_manager = self._event_manager = player.event_manager()
@@ -965,7 +965,7 @@ class PlayerVLC(PyPlayerBackend):
             animations working smoothly without draining resources.
             While minimized, resource-usage is kept to a minimum. '''
 
-        logging.info('Slider-updating thread started.')
+        logging.debug('Slider-updating thread started.')
 
         # re-define global aliases -> having them as locals is even faster
         _gui = gui
@@ -1061,7 +1061,7 @@ class PlayerVLC(PyPlayerBackend):
                                 now = _get_time()
                                 time_elapsed = now - start
                         except Exception as error:
-                            logging.warning(f'update_slider_thread bottleneck - {type(error)}: {error} -> delay={self.ui_delay} execution-time={_get_time() - start}')
+                            logging.debug(f'update_slider_thread bottleneck - {type(error)}: {error} -> delay={self.ui_delay} execution-time={_get_time() - start}')
                         finally:
                             start = now
 
@@ -1071,7 +1071,7 @@ class PlayerVLC(PyPlayerBackend):
                             _sleep(0.0001)              # sleep to force-update get_time()
                             _sleep(self.ui_delay - (_get_time() - start))
                         except Exception as error:
-                            logging.warning(f'update_slider_thread bottleneck - {type(error)}: {error} -> delay={self.ui_delay} execution-time={_get_time() - start}')
+                            logging.debug(f'update_slider_thread bottleneck - {type(error)}: {error} -> delay={self.ui_delay} execution-time={_get_time() - start}')
                         finally:
                             start = _get_time()
 

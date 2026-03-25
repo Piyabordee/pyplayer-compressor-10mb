@@ -66,7 +66,7 @@ logging.basicConfig(
 )
 
 logging.info(f'Logger initalized at {constants.LOG_PATH}.')
-logging.info(f'Arguments: {args}')
+logging.debug(f'Arguments: {args}')
 
 
 # ---------------------
@@ -76,18 +76,18 @@ def exit(self: QtW.QMainWindow):
     try:
         self.closed = True
         self.player.disable(wait=False)
-        logging.info('Exiting. self.closed set to True and player disabled.')
+        logging.debug('Exiting. self.closed set to True and player disabled.')
 
         if self.tray_icon is not None:
             self.tray_icon.setVisible(False)
-            logging.info('System tray icon stopped.')
+            logging.debug('System tray icon stopped.')
 
         self.app.quit()
-        logging.info('QApplication quit.')
+        logging.debug('QApplication quit.')
 
         try: config.saveConfig(self, constants.CONFIG_PATH)
         except: logging.warning(f'Error saving configuration: {format_exc()}')
-        logging.info('Configuration has been saved. Goodbye.')
+        logging.debug('Configuration has been saved. Goodbye.')
 
     except:
         logging.critical(f'\n\n(!)QTSTART.EXIT FAILED: {format_exc()}')
@@ -152,7 +152,7 @@ def after_show_setup(self: QtW.QMainWindow):
             self.log_on_statusbar_signal.emit(f'Command-line file {args.file} does not exist.')
         else:
             try:
-                logging.info(f'Opening pre-selected path: {args.file}')
+                logging.debug(f'Opening pre-selected path: {args.file}')
                 self.open(args.file)
                 self.log_on_statusbar_signal.emit(f'Command-line path opened: {args.file}')
             except:
@@ -183,7 +183,7 @@ def after_show_setup(self: QtW.QMainWindow):
 
     # start system tray icon
     if config.cfg.grouptray:
-        logging.info('Creating system tray icon...')
+        logging.debug('Creating system tray icon...')
         self.app.setQuitOnLastWindowClosed(False)   # ensure qt does not exit until we tell it to
         self.tray_icon = get_tray_icon(self)
 

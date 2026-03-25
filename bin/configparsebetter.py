@@ -297,7 +297,7 @@ class _ConfigParseBetter:
 
 
     def write(self, filepath=None, mode='w', appdata=False, **kwargs):
-        logger.debug('Writing ConfigParseBetter config.')
+        # logger.debug('Writing ConfigParseBetter config.')
         filepath = self.createConfigPath(filepath, appdata) if filepath else self.__filepath
         encoding = kwargs.get('encoding', self.__encoding)
         with open(filepath, mode, encoding=encoding) as configfile:
@@ -425,7 +425,8 @@ class _ConfigParseBetter:
             value = fallback    # TODO add elif for raising error here?
 
         section[key] = str(value).replace('%', '%%')   # 1.0595 sec/million TODO these % signs are for a nightmare https://stackoverflow.com/questions/46156125/how-to-use-signs-in-configparser-python
-        logger.debug(f'Loading: key={key} -> value={value} ({type(value)}) | fallback={fallback} delim={delimiter} val_type={val_type} delim_type={delimiter_type}')
+        # Only log if value differs from fallback (useful for debugging config issues)
+        # logger.debug(f'Loading: key={key} -> value={value} ({type(value)}) | fallback={fallback} delim={delimiter} val_type={val_type} delim_type={delimiter_type}')
 
         #try:                                   # TODO throw more errors here
         true_value = value
@@ -650,7 +651,7 @@ class _ConfigParseBetter:
 
     def save(self, key, *values, delimiter=None,
              delimiter_type=None, section=None):
-        logger.debug(f'Saving: key={key} values={values}, delim={delimiter}')
+        # logger.debug(f'Saving: key={key} values={values}, delim={delimiter}')
         if delimiter is None: delimiter = self.__defaultDelimiter
         if isinstance(values, GENERATOR_TYPE): values = tuple(values)           # turn generator into more flexible iterable
         if self.__autoUnpackLen1Lists:
@@ -931,7 +932,7 @@ class ConfigParseBetterQt(ConfigParseBetter):   # TODO support Pyside and other 
 
 
     def write(self, *args, **kwargs):
-        logger.debug(f'Writing ConfigParseBetterQt config ({len(self.__widgets)} widgets saved).')
+        # logger.debug(f'Writing ConfigParseBetterQt config ({len(self.__widgets)} widgets saved).')
         if self._ConfigParseBetter__autosave:   # autosave widgets with their parameters before writing
             for parameters in reversed(self.__widgets):
                 self.saveQt(
@@ -954,7 +955,7 @@ class ConfigParseBetterQt(ConfigParseBetter):   # TODO support Pyside and other 
         section = self.getSection(section)
         if self._ConfigParseBetter__autosave:   # remember widget and parameters for autosaving later
             self.__widgets.append((widgets, children, recursive, ignore, extraWidgets, getComboText, section))
-        logger.debug(f'Loading Qt values from {len(widgets)} widget(s)')
+        # logger.debug(f'Loading Qt values from {len(widgets)} widget(s)')
 
         # checkable qactions, font-combobox, datetime
 

@@ -916,7 +916,7 @@ class Edit:
                     lines_read += 1
                     lines_to_log.append(f'FFmpeg output line #{lines_read}: {progress_line}')
                     if not progress_line:
-                        logging.info('FFmpeg output a blank progress line to STDOUT, leaving progress loop...')
+                        logging.debug('FFmpeg output a blank progress line to STDOUT, leaving progress loop...')
                         break
 
                     # check for common errors
@@ -951,7 +951,7 @@ class Edit:
                 # batch-log all our newly read lines at once
                 if lines_to_log:
                     progress_lines = '\n'.join(lines_to_log)
-                    logging.info(f'New FFmpeg output from {self}:\n{progress_lines}')
+                    logging.debug(f'New FFmpeg output from {self}:\n{progress_lines}')
                     lines_to_log.clear()
 
             # terminate process just in case ffmpeg got locked up at the end
@@ -968,7 +968,7 @@ class Edit:
         except Exception as error:
             if lines_to_log:
                 progress_lines = '\n'.join(lines_to_log)
-                logging.info(f'Final FFmpeg output leading up to error {self}:\n{progress_lines}')
+                logging.debug(f'Final FFmpeg output leading up to error {self}:\n{progress_lines}')
 
             if str(error) == 'Cancelled.':
                 log_on_statusbar('Cancelling...')
@@ -1393,7 +1393,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         except: pass
         try: os.remove(cmdpath)
         except: pass
-        logging.info(f'Fast-start connection established. Will listen for commands at {cmdpath}.')
+        logging.debug(f'Fast-start connection established. Will listen for commands at {cmdpath}.')
         use_timeout = timeout > 0
 
         while not self.closed:
@@ -2213,7 +2213,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
     # >>> THEMES <<<
     # ---------------------
     def load_themes(self):
-        logging.info('Loading themes...')
+        logging.debug('Loading themes...')
         self.themes = []
         for filename in os.listdir(constants.THEME_DIR):
             if filename[-4:] in ('.qss', '.css', '.txt'):   # this isn't the best way to parse css, but it works well enough
@@ -2282,7 +2282,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         ''' Gets and sets the current theme to the first theme with called
             `theme_name`. If not found, the "default" theme is used. '''
         theme = self.get_theme(theme_name)
-        logging.info(f'Setting theme to {theme.get("name") if theme else None}')
+        logging.debug(f'Setting theme to {theme.get("name") if theme else None}')
         old_theme = self.get_theme(config.cfg.theme)        # config.cfg must be used because this is called before cfg is returned from config.py
 
         # undo the QToolTip workaround mentioned below
@@ -8183,7 +8183,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
     def _log_on_statusbar_slot(self, msg: str, timeout: int = 20000):
         ''' Logs a `msg` while simultaneously displaying it
             on the statusbar for `timeout` milliseconds. '''
-        logging.info(msg)
+        logging.debug(msg)
         show_on_statusbar(msg, timeout)
 
 
@@ -8261,7 +8261,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             `popup_kwargs` are a dict of keyword-arguments needed to construct
             the relevant `QMessageBox` for the user, depending on `results`. '''
         try:
-            logging.info(f'Cleaning up after update check. results={results}')
+            logging.debug(f'Cleaning up after update check. results={results}')
             settings_were_open = settings.isVisible()   # hide the always-on-top settings while we show popups
             if settings_were_open:
                 settings.hide()
@@ -9700,8 +9700,8 @@ if __name__ == "__main__":
         import executable.hook                          # manually import launch-hook when running from script
         from PIL import Image                           # get_PIL_Image sometimes hangs on import when running from script
     try:
-        logging.info(f'PyPlayer opened at {constants.SCRIPT_PATH} with executable {sys.executable}')
-        logging.info('Creating QApplication and GUI...')
+        logging.debug(f'PyPlayer opened at {constants.SCRIPT_PATH} with executable {sys.executable}')
+        logging.debug('Creating QApplication and GUI...')
         app = QtW.QApplication(sys.argv)                # init qt
         gui = widgets.gui = GUI_Instance(app)           # init empty GUI instance
         gui.setup()                                     # setup gui's variables, widgets, and threads (0.3mb)
@@ -9763,10 +9763,10 @@ if __name__ == "__main__":
         with open(constants.PID_PATH, 'w'):             # create PID file
             gc.collect(generation=2)                    # final garbage collection before starting
             constants.APP_RUNNING = True
-            logging.info(f'Starting GUI after {get_time() - constants.SCRIPT_START_TIME:.2f} seconds.')
+            logging.debug(f'Starting GUI after {get_time() - constants.SCRIPT_START_TIME:.2f} seconds.')
             try: app.exec()
             except: logging.critical(f'(!) GUI FAILED TO EXECUTE: {format_exc()}')
-            logging.info('Application execution has finished.')
+            logging.debug('Application execution has finished.')
         try: os.remove(constants.PID_PATH)
         except: logging.warning(f'(!) Failed to delete PID file: {format_exc()}')
     except: logging.critical(f'(!) SCRIPT FAILED TO INITIALIZE: {format_exc()}')
