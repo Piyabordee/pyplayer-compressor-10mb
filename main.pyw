@@ -483,6 +483,13 @@ class CompressProgressDialog(QtW.QDialog):
         self.setModal(False)  # Modeless - allows user to move window
         self.setMinimumWidth(400)
 
+        # Style all text as black
+        self.setStyleSheet('''
+            QLabel { color: black; }
+            QPushButton { color: black; }
+            QProgressBar { color: black; }
+        ''')
+
         layout = QtW.QVBoxLayout(self)
 
         # File name label
@@ -6355,6 +6362,13 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             save_dialog = QProgressDialog('Saving trimmed video...', 'Cancel', 0, 0, self)
             save_dialog.setWindowModality(QtCore.Qt.WindowModal)
             save_dialog.setWindowTitle('Saving')
+            # Style all text as black
+            save_dialog.setStyleSheet('''
+                QProgressDialog { color: black; }
+                QLabel { color: black; }
+                QPushButton { color: black; }
+                QProgressBar { color: black; }
+            ''')
             save_dialog.show()
             # Keep dialog responsive by processing events
             save_dialog.setValue(0)
@@ -7932,7 +7946,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         '''Show dialog when FFmpeg is not available for compression.'''
         from PyQt5.QtWidgets import QMessageBox
 
-        qthelpers.getPopupOk(
+        dialog = qthelpers.getPopupOk(
             title='FFmpeg Required',
             text='Auto-compress requires FFmpeg, which was not detected.',
             textInformative=(
@@ -7941,7 +7955,9 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             ),
             icon=QMessageBox.Warning,
             **self.get_popup_location()
-        ).exec()
+        )
+        dialog.setStyleSheet('QMessageBox { color: black; } QLabel { color: black; } QPushButton { color: black; }')
+        dialog.exec()
 
     def _show_duration_error_dialog(self):
         '''Show dialog when video duration cannot be determined.'''
@@ -7973,13 +7989,15 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         '''Show dialog when compression fails.'''
         from PyQt5.QtWidgets import QMessageBox
 
-        qthelpers.getPopupOk(
+        dialog = qthelpers.getPopupOk(
             title='Compression Failed',
             text='An error occurred while compressing the video.',
             textInformative=f'Error: {error_message}\n\nYour trimmed video was not saved.',
             icon=QMessageBox.Critical,
             **self.get_popup_location()
-        ).exec()
+        )
+        dialog.setStyleSheet('QMessageBox { color: black; } QLabel { color: black; } QPushButton { color: black; }')
+        dialog.exec()
 
 
     def show_delete_prompt(self, *, exiting: bool = False) -> QtW.QDialogButtonBox.StandardButton:
