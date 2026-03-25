@@ -97,7 +97,7 @@ def loadConfig(gui, filename: str = constants.CONFIG_PATH) -> ConfigParseBetterQ
     load('explore', False)
     load('encode', True)
 
-    logger.info(f'It took {time.time() - start:.4f} seconds to load this config.\n')
+    logger.debug(f'It took {time.time() - start:.4f} seconds to load this config.\n')
     return cfg
 
 

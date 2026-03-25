@@ -48,7 +48,7 @@ def check_for_update(self, log: bool = True, _launch: bool = False) -> None:
     '''
     import requests
     release_url = f'{constants.REPOSITORY_URL}/releases/latest'
-    logger.info(f'Checking {release_url} for updates')
+    logger.debug(f'Checking {release_url} for updates')
     try:
         response = requests.get(release_url)
         response.raise_for_status()
@@ -56,7 +56,6 @@ def check_for_update(self, log: bool = True, _launch: bool = False) -> None:
         latest_version = latest_version_url.split('/')[-1].lstrip('v')
 
         current_version = constants.VERSION.split()[1]
-        logger.info(f'Latest version: {latest_version} | Current version: {current_version}')
 
         if len(latest_version) != len(current_version):
             self.log_on_statusbar_signal.emit('GitHub release URL could not be parsed correctly.')
@@ -70,6 +69,7 @@ def check_for_update(self, log: bool = True, _launch: bool = False) -> None:
             )
 
         if get_later_version(latest_version, current_version) != current_version:    # current version is older than latest version
+            logger.info(f'Update available: {current_version} -> {latest_version}')
             if constants.IS_COMPILED and constants.IS_WINDOWS:          # TODO Windows only for now (and no auto-updating directly from the script)
                 return self._handle_updates_signal.emit(
                     dict(latest_version_url=latest_version_url),
