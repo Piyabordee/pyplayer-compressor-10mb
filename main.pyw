@@ -6279,8 +6279,8 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             If auto_compress_after_trim is enabled, compresses the output. '''
         import os
 
-        # Check if auto-compress is enabled
-        auto_compress = getattr(config.cfg, 'auto_compress_after_trim', False)
+        # Check if auto-compress is enabled (self IS the gui object with this attribute)
+        auto_compress = getattr(self, 'auto_compress_after_trim', False)
 
         if not auto_compress:
             # Use normal save flow if auto-compress is disabled
@@ -6336,7 +6336,10 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             # Step 2: Prepare paths for two-step process
             base, ext = os.path.splitext(base_output)
             compressed_output = f"{base}_compressed{ext}"
-            temp_trimmed = add_path_suffix(base_output, '_temp', unique=True)
+            # Save temp file in app's temp directory (hidden from user), not in output folder
+            import uuid
+            temp_name = f"pyplayer_trim_{uuid.uuid4().hex[:8]}{ext}"
+            temp_trimmed = os.path.join(constants.TEMP_DIR, temp_name)
 
             logging.info(f'Step 1: Saving trimmed video to temp: {temp_trimmed}')
             logging.info(f'Step 2: Will compress to: {compressed_output}')
@@ -6402,41 +6405,56 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 self.buttonTrimSave.setVisible(False)
                 return
 
-            # Step 5: Compress the trimmed video
+            # Step 5: Compress the trimmed video (runs in background thread)
             logging.info(f'Compressing trimmed video to: {compressed_output}')
-            success = self._compress_with_progress(
-                input_path=temp_trimmed,
-                output_path=compressed_output
-            )
 
-            # Step 6: Clean up temp trimmed file
-            try:
-                if os.path.exists(temp_trimmed):
-                    os.remove(temp_trimmed)
-                    logging.info(f'Cleaned up temp file: {temp_trimmed}')
-            except Exception as e:
-                logging.warning(f'Failed to remove temp file {temp_trimmed}: {e}')
+            # Define completion callback for async compression
+            def compression_complete(success: bool, error: str):
+                '''Called when compression completes (on main thread).'''
+                logging.info(f'Compression complete callback: success={success}, error={error}')
 
-            if not success:
-                # Compression failed - reset trim mode
+                # Step 6: Clean up temp trimmed file
+                try:
+                    if os.path.exists(temp_trimmed):
+                        os.remove(temp_trimmed)
+                        logging.info(f'Cleaned up temp file: {temp_trimmed}')
+                except Exception as e:
+                    logging.warning(f'Failed to remove temp file {temp_trimmed}: {e}')
+
+                if not success:
+                    # Compression failed - reset trim mode
+                    logging.error(f'Compression failed: {error}')
+                    self._reset_trim_mode()
+                    self.buttonTrimSave.setVisible(False)
+                    return
+
+                # Step 7: Success! Show status and open the compressed file
+                logging.info(f'Successfully trimmed and compressed: {compressed_output}')
+                show_on_statusbar(f'Trimmed and compressed: {os.path.basename(compressed_output)}', 5000)
+
+                # Open the compressed file
+                logging.info(f'Opening compressed file: {compressed_output}')
+                self.open_media(compressed_output)
+
+                # Finally, reset trim mode
                 self._reset_trim_mode()
                 self.buttonTrimSave.setVisible(False)
-                return
+                logging.info('Trim mode reset and button hidden')
 
-            # Step 7: Success! Show status and open the compressed file
-            logging.info(f'Successfully trimmed and compressed: {compressed_output}')
-            show_on_statusbar(f'Trimmed and compressed: {os.path.basename(compressed_output)}', 5000)
+            # Start async compression (returns immediately)
+            self._compress_with_progress(
+                input_path=temp_trimmed,
+                output_path=compressed_output,
+                completion_callback=compression_complete
+            )
 
-            # Open the compressed file
-            self.open_media(compressed_output)
+            # Function returns here - compression continues in background
 
         except Exception as e:
             logging.getLogger('main.pyw').error(f'Error in save_from_trim_button with auto-compress: {e}')
             show_on_statusbar(f'Auto-compress failed: {str(e)}', 10000)
-
-        # Finally, reset trim mode
-        self._reset_trim_mode()
-        self.buttonTrimSave.setVisible(False)
+            self._reset_trim_mode()
+            self.buttonTrimSave.setVisible(False)
 
 
     def set_trim_mode(self, action: QtW.QAction):
@@ -7778,30 +7796,34 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         finally: cfg.trimmodeselected = True                    # set this to True no matter what (_save is waiting on this)
 
 
-    def _compress_with_progress(self, input_path: str, output_path: str) -> bool:
+    def _compress_with_progress(self, input_path: str, output_path: str, completion_callback=None) -> None:
         '''
-        Show progress dialog and compress video for Discord.
+        Show progress dialog and compress video for Discord in a background thread.
+        This method returns immediately and calls completion_callback when done.
 
         Args:
             input_path: Path to input video file
             output_path: Path to output compressed video
-
-        Returns:
-            True if compression succeeded, False otherwise
+            completion_callback: Optional callback(success: bool, error: str) -> None
         '''
         import compression
 
         # Verify FFmpeg is available
         if not constants.FFMPEG:
             self._show_ffmpeg_missing_dialog()
-            return False
+            if completion_callback:
+                completion_callback(False, 'FFmpeg not available')
+            return
 
         # Verify FFprobe is available (optional but recommended)
         ffprobe = constants.FFPROBE if constants.FFPROBE else ''
 
-        # Create and show progress dialog
+        # Create and show progress dialog (modeless so it doesn't block)
         dialog = CompressProgressDialog(self, input_path)
         dialog.show()
+
+        # Keep dialog reference for the thread
+        self._compression_dialog = dialog
 
         # Progress callback using Qt's thread-safe method
         def progress_callback(percent: int):
@@ -7812,30 +7834,44 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 QtCore.Q_ARG(int, percent)
             )
 
-        # Run compression
-        success, error = compression.compress_video(
-            ffmpeg_path=constants.FFMPEG,
-            ffprobe_path=ffprobe,
-            input_path=input_path,
-            output_path=output_path,
-            progress_callback=progress_callback
-        )
+        # Compression function to run in background thread
+        def run_compression():
+            success, error = compression.compress_video(
+                ffmpeg_path=constants.FFMPEG,
+                ffprobe_path=ffprobe,
+                input_path=input_path,
+                output_path=output_path,
+                progress_callback=progress_callback
+            )
 
-        # Close dialog
-        dialog.close()
+            # Schedule completion handling on main thread using QTimer.singleShot
+            def handle_completion():
+                logging.info(f'handle_completion called: success={success}')
 
-        if not success:
-            # Show error dialog
-            self._show_compress_error_dialog(error)
+                # Close the progress dialog properly
+                if hasattr(self, '_compression_dialog') and self._compression_dialog:
+                    logging.info('Closing compression dialog')
+                    self._compression_dialog.accept()  # Use accept() instead of close()
+                    self._compression_dialog.deleteLater()  # Schedule for deletion
+                    self._compression_dialog = None
 
-            self._cleanup_temp_files(output_path)
+                if not success:
+                    # Show error dialog
+                    self._show_compress_error_dialog(error)
+                    self._cleanup_temp_files(output_path)
+                else:
+                    # Success notification
+                    logging.getLogger('main.pyw').info(f'Compressed video saved: {output_path}')
 
-            return False
+                # Call user's completion callback if provided
+                if completion_callback:
+                    completion_callback(success, error)
 
-        # Success notification
-        logging.getLogger('main.pyw').info(f'Compressed video saved: {output_path}')
+            # Use QTimer to run handle_completion on the main thread
+            QtCore.QTimer.singleShot(0, handle_completion)
 
-        return True
+        # Start compression in background thread
+        Thread(target=run_compression, daemon=True).start()
 
 
     def _show_ffmpeg_missing_dialog(self):
