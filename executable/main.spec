@@ -1,30 +1,69 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+#
+# PyPlayer Compressor - PyInstaller Spec File
+# Compatible with PyInstaller 6.x+
+#
 
 import os
 import sys
+
 block_cipher = None
 
-CWD = os.path.dirname(os.path.realpath(sys.argv[1]))
-ROOT_DIR = os.path.dirname(CWD)
+# Get paths - PyInstaller 6.x runs spec from current directory
+SPEC_DIR = os.path.abspath(os.getcwd())
+CWD = SPEC_DIR
+ROOT_DIR = os.path.dirname(SPEC_DIR)
 VERSION_FILE = os.path.join(CWD, 'version_info_main.txt')
 ICON = os.path.join(ROOT_DIR, 'themes', 'resources', 'logo.ico')
 
 
-a = Analysis([os.path.join(ROOT_DIR, 'main.pyw')],
-             pathex=[],
-             binaries=[],
-             datas=[(os.path.join(ROOT_DIR, 'themes'), 'themes'),
-                    (os.path.join(CWD, 'include'), 'plugins')],
-             hiddenimports=[],
-             hookspath=[],
-             hooksconfig={},
-             runtime_hooks=[os.path.join(CWD, 'hook.py')],
-             excludes=[],
-             win_no_prefer_redirects=False,
-             win_private_assemblies=False,
-             cipher=block_cipher,
-             noarchive=False)
+a = Analysis(
+    [os.path.join(ROOT_DIR, 'main.pyw')],
+    pathex=[ROOT_DIR],
+    binaries=[
+        # VLC binaries
+        (os.path.join(CWD, 'include', 'vlc-windows', 'libvlc.dll'), 'plugins/vlc'),
+        (os.path.join(CWD, 'include', 'vlc-windows', 'libvlccore.dll'), 'plugins/vlc'),
+        # FFmpeg binaries
+        (os.path.join(CWD, 'include', 'ffmpeg-windows', 'ffmpeg.exe'), 'plugins/ffmpeg'),
+        (os.path.join(CWD, 'include', 'ffmpeg-windows', 'ffprobe.exe'), 'plugins/ffmpeg'),
+    ],
+    datas=[
+        (os.path.join(ROOT_DIR, 'themes'), 'themes'),
+        (os.path.join(CWD, 'include', 'vlc-windows', 'plugins'), 'plugins/vlc/plugins'),
+        (os.path.join(CWD, 'include', 'ffmpeg-windows'), 'plugins/ffmpeg'),
+    ],
+    hiddenimports=[
+        'PyQt5.QtCore',
+        'PyQt5.QtGui',
+        'PyQt5.QtWidgets',
+        'vlc',
+        'certifi',
+        'certifi.core',
+        'colour',
+        'filetype',
+        'music_tag',
+        'tinytag',
+        'Send2Trash',
+        'win32com',
+        'pywintypes',
+    ],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[os.path.join(CWD, 'hook.py')],
+    excludes=[
+        'tkinter',
+        'matplotlib',
+        'numpy',
+        'pandas',
+        'scipy',
+        'IPython',
+    ],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False
+)
 
 pyz = PYZ(a.pure, a.zipped_data,
           cipher=block_cipher)
