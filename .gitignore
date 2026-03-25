@@ -57,12 +57,37 @@ settings.json
 .claude/
 memory/
 
-# PyPlayer - Build output
+# ============================================================
+# PyPlayer - Build output (Original)
+# ============================================================
 pyplayer_*/
-build/
-dist/
 
+# ============================================================
+# PyInstaller & Inno Setup Build Artifacts (NEW)
+# ============================================================
+# PyInstaller build outputs
+executable/build/
+executable/compiling/
+executable/compiled/
+executable/dist/
+executable/*.spec.backup
+
+# PyInstaller temp files
+*.toc
+*.wiz
+*.status
+
+# Inno Setup installer output
+executable/installer_output/
+*.exe
+!updater.exe
+
+# Inno Setup temp files
+executable/*.~iss
+
+# ============================================================
 # PyPlayer - Runtime temporary files
+# ============================================================
 bin/temp/
 bin/temp/*
 !bin/temp/.gitkeep
@@ -73,3 +98,15 @@ bin/temp/*
 # PyPlayer - Probe output files
 *.probe.txt
 bin/*/probed/
+
+# ============================================================
+# Build scripts output (Optional - uncomment if needed)
+# ============================================================
+# If you don't want to track the batch script:
+# build_installer.bat
+
+# If you don't want to track version info files:
+# executable/version_info_*.txt
+
+# If you don't want to track the helper module:
+# resource_helper.py

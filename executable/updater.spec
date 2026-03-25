@@ -1,12 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+#
+# PyPlayer Compressor Updater - PyInstaller Spec File
+# Compatible with PyInstaller 6.x+
+#
 
 import os
 import sys
+
 block_cipher = None
 
-CWD = os.path.dirname(os.path.realpath(sys.argv[1]))
-ROOT_DIR = os.path.dirname(CWD)
+# Get paths - PyInstaller 6.x runs spec from current directory
+SPEC_DIR = os.path.abspath(os.getcwd())
+CWD = SPEC_DIR
+ROOT_DIR = os.path.dirname(SPEC_DIR)
 VERSION_FILE = os.path.join(CWD, 'version_info_updater.txt')
 ICON = os.path.join(ROOT_DIR, 'themes', 'resources', 'updater.ico')
 
