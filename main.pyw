@@ -6434,7 +6434,7 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
                 # Open the compressed file
                 logging.info(f'Opening compressed file: {compressed_output}')
-                self.open_media(compressed_output)
+                self.open(compressed_output)
 
                 # Finally, reset trim mode
                 self._reset_trim_mode()
@@ -7808,11 +7808,15 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         '''
         import compression
 
+        # Store completion callback so the slot can access it
+        self._compression_completion_callback = completion_callback
+
         # Verify FFmpeg is available
         if not constants.FFMPEG:
             self._show_ffmpeg_missing_dialog()
             if completion_callback:
                 completion_callback(False, 'FFmpeg not available')
+            self._compression_completion_callback = None
             return
 
         # Verify FFprobe is available (optional but recommended)
@@ -7836,42 +7840,68 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         # Compression function to run in background thread
         def run_compression():
-            success, error = compression.compress_video(
-                ffmpeg_path=constants.FFMPEG,
-                ffprobe_path=ffprobe,
-                input_path=input_path,
-                output_path=output_path,
-                progress_callback=progress_callback
+            try:
+                success, error = compression.compress_video(
+                    ffmpeg_path=constants.FFMPEG,
+                    ffprobe_path=ffprobe,
+                    input_path=input_path,
+                    output_path=output_path,
+                    progress_callback=progress_callback
+                )
+            except Exception as e:
+                success, error = False, f'Compression exception: {e}'
+                logging.getLogger('main.pyw').error(f'Compression failed: {e}')
+
+            logging.info(f'Compression thread finished: success={success}')
+
+            # Ensure progress reaches 100% even if callback wasn't called
+            if success:
+                progress_callback(100)
+
+            # Use invokeMethod to schedule dialog close on main thread
+            # This is more reliable than QTimer.singleShot for cross-thread calls
+            QtCore.QMetaObject.invokeMethod(
+                self,
+                '_handle_compression_completion',
+                QtCore.Qt.QueuedConnection,
+                QtCore.Q_ARG(bool, success),
+                QtCore.Q_ARG(str, error)
             )
-
-            # Schedule completion handling on main thread using QTimer.singleShot
-            def handle_completion():
-                logging.info(f'handle_completion called: success={success}')
-
-                # Close the progress dialog properly
-                if hasattr(self, '_compression_dialog') and self._compression_dialog:
-                    logging.info('Closing compression dialog')
-                    self._compression_dialog.accept()  # Use accept() instead of close()
-                    self._compression_dialog.deleteLater()  # Schedule for deletion
-                    self._compression_dialog = None
-
-                if not success:
-                    # Show error dialog
-                    self._show_compress_error_dialog(error)
-                    self._cleanup_temp_files(output_path)
-                else:
-                    # Success notification
-                    logging.getLogger('main.pyw').info(f'Compressed video saved: {output_path}')
-
-                # Call user's completion callback if provided
-                if completion_callback:
-                    completion_callback(success, error)
-
-            # Use QTimer to run handle_completion on the main thread
-            QtCore.QTimer.singleShot(0, handle_completion)
 
         # Start compression in background thread
         Thread(target=run_compression, daemon=True).start()
+
+
+    @QtCore.pyqtSlot(bool, str)
+    def _handle_compression_completion(self, success: bool, error: str):
+        '''
+        Slot method called on main thread when compression completes.
+        This is invoked via QMetaObject.invokeMethod from the background thread.
+
+        Args:
+            success: Whether compression succeeded
+            error: Error message if failed
+        '''
+        import os
+        logging.info(f'Compression completion handler called: success={success}')
+
+        # Close the progress dialog
+        if hasattr(self, '_compression_dialog') and self._compression_dialog:
+            logging.info('Closing compression progress dialog')
+            self._compression_dialog.accept()
+            self._compression_dialog.deleteLater()
+            self._compression_dialog = None
+
+        # Note: Error handling and file opening are done in the completion_callback
+        # which was passed to _compress_with_progress
+        # We just emit a signal or call the callback directly here
+
+        # Find and call the stored completion callback
+        if hasattr(self, '_compression_completion_callback'):
+            callback = self._compression_completion_callback
+            self._compression_completion_callback = None  # Clear reference
+            if callback:
+                callback(success, error)
 
 
     def _show_ffmpeg_missing_dialog(self):
