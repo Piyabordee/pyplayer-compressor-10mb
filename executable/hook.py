@@ -4,14 +4,50 @@
     file that the user wants to open and then exiting the current instance, so
     as to skip re-opening PyPlayer. Also cleans temp folder and uses sys.path
     magic to hide our .dll, .pyd, and libvlc files in alternate directories.
-    thisismy-github -> launcher.pyw: 2/1/22, hook.py: 4/8/22, combined: 4/13/22 '''
+
+    Updated for PyInstaller 6.x compatibility (_internal folder structure).
+
+    thisismy-github -> launcher.pyw: 2/1/22, hook.py: 4/8/22, combined: 4/13/22
+    PyInstaller 6.x update: 2025-03-25 '''
 
 import sys
 import os
 
 
-CWD = os.path.dirname(sys.argv[0])
-TEMP_DIR = os.path.join(CWD, 'PyQt5' if getattr(sys, 'frozen', False) else 'bin', 'temp')
+# ============================================================
+# Path Detection - Compatible with PyInstaller 5.x and 6.x
+# ============================================================
+IS_FROZEN = getattr(sys, 'frozen', False)
+
+if IS_FROZEN:
+    # PyInstaller 6.x uses _internal folder
+    # sys._MEIPASS points to the internal directory
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller 6.x: sys._MEIPASS = .../release/_internal
+        INTERNAL_DIR = sys._MEIPASS
+        # CWD is the directory containing the exe
+        CWD = os.path.dirname(sys.executable)
+    else:
+        # PyInstaller 5.x or older
+        CWD = os.path.dirname(sys.argv[0])
+        INTERNAL_DIR = CWD
+else:
+    # Development mode
+    CWD = os.path.dirname(os.path.abspath(__file__))
+    INTERNAL_DIR = CWD
+
+# Determine temp directory location
+if IS_FROZEN:
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller 6.x: temp inside _internal
+        TEMP_DIR = os.path.join(INTERNAL_DIR, 'temp')
+    else:
+        # PyInstaller 5.x: temp in PyQt5 or bin folder
+        TEMP_DIR = os.path.join(CWD, 'PyQt5', 'temp')
+else:
+    # Development mode
+    TEMP_DIR = os.path.join(CWD, 'bin', 'temp')
+
 IS_WINDOWS = sys.platform in ('win32', 'cygwin', 'msys')
 
 
@@ -20,6 +56,9 @@ IS_WINDOWS = sys.platform in ('win32', 'cygwin', 'msys')
     instance, then signal to our current instance that it should exit. '''
 try:
     filepath = sys.argv[1]
+    # Create temp directory if it doesn't exist
+    os.makedirs(TEMP_DIR, exist_ok=True)
+
     pids = (os.path.join(TEMP_DIR, file) for file in os.listdir(TEMP_DIR) if file[-4:] == '.pid')   # get all .pid files
     for file in reversed(sorted(pids, key=os.path.getctime)):   # sort by age, then reverse (newest first)
         try:    # check if PID file is valid
@@ -63,11 +102,37 @@ except:                                             # unexpected serious error -
 ##############################################################################
 ''' Add PyQt5 to sys.path and create VLC environment variables (if needed)
     so we can hide our .dll, .pyd, and libvlc files in alternate folders. '''
-sys.path.append(os.path.join(CWD, 'PyQt5'))
 
-VLC_PATH = os.path.join(CWD, 'plugins', 'vlc')
-LIB_PATH = os.path.join(VLC_PATH, 'libvlc.dll')
-MODULE_PATH = os.path.join(VLC_PATH, 'plugins')
+# PyQt5 path handling for PyInstaller 6.x
+if IS_FROZEN and hasattr(sys, '_MEIPASS'):
+    # PyInstaller 6.x: PyQt5 is in _internal, already in sys.path
+    pass
+else:
+    # PyInstaller 5.x or development mode
+    sys.path.append(os.path.join(CWD, 'PyQt5'))
+
+# VLC path handling - compatible with both PyInstaller versions
+if IS_FROZEN and hasattr(sys, '_MEIPASS'):
+    # PyInstaller 6.x structure:
+    # _internal/libvlccore.dll (may exist at root level)
+    # _internal/plugins/vlc/libvlc.dll
+    # _internal/plugins/vlc/plugins/
+    VLC_PATH = os.path.join(INTERNAL_DIR, 'plugins', 'vlc')
+    LIB_PATH = os.path.join(VLC_PATH, 'libvlc.dll')
+    MODULE_PATH = os.path.join(VLC_PATH, 'plugins')
+
+    # Fallback: try root level if not in plugins/vlc
+    if not os.path.exists(LIB_PATH):
+        LIB_PATH = os.path.join(INTERNAL_DIR, 'libvlc.dll')
+        VLC_PATH = INTERNAL_DIR
+        MODULE_PATH = os.path.join(INTERNAL_DIR, 'plugins')
+else:
+    # PyInstaller 5.x or development mode
+    VLC_PATH = os.path.join(CWD, 'plugins', 'vlc')
+    LIB_PATH = os.path.join(VLC_PATH, 'libvlc.dll')
+    MODULE_PATH = os.path.join(VLC_PATH, 'plugins')
+
+# Set VLC environment variables if not already set
 if 'PYTHON_VLC_LIB_PATH' not in os.environ and os.path.exists(LIB_PATH):
     os.environ['PYTHON_VLC_LIB_PATH'] = LIB_PATH
 if 'PYTHON_VLC_MODULE_PATH' not in os.environ and os.path.exists(MODULE_PATH):
