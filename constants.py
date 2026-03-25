@@ -25,22 +25,56 @@ PLATFORM = platform.system()
 IS_WINDOWS = PLATFORM == 'Windows'
 IS_MAC = PLATFORM == 'Darwin'
 IS_LINUX = not IS_WINDOWS and not IS_MAC
-SCRIPT_PATH = sys.executable if IS_COMPILED else os.path.realpath(__file__)
-CWD = os.path.dirname(SCRIPT_PATH)
+
+# ============================================================
+# Path Resolution - Compatible with PyInstaller 5.x and 6.x
+# ============================================================
+if IS_COMPILED:
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller 6.x: resources are in _internal
+        INTERNAL_DIR = sys._MEIPASS
+        SCRIPT_PATH = sys.executable
+        CWD = os.path.dirname(SCRIPT_PATH)
+        RESOURCE_BASE = INTERNAL_DIR
+    else:
+        # PyInstaller 5.x: resources at root level
+        SCRIPT_PATH = sys.executable
+        CWD = os.path.dirname(SCRIPT_PATH)
+        RESOURCE_BASE = CWD
+else:
+    # Development mode
+    SCRIPT_PATH = os.path.realpath(__file__)
+    CWD = os.path.dirname(SCRIPT_PATH)
+    RESOURCE_BASE = CWD
 
 _sep = os.sep
-BIN_DIR = f'{CWD}{_sep}{"PyQt5" if IS_COMPILED else "bin"}'
-TEMP_DIR = f'{BIN_DIR}{_sep}temp'
-PROBE_DIR = f'{TEMP_DIR}{_sep}probed'
-THUMBNAIL_DIR = f'{TEMP_DIR}{_sep}thumbnails'
-THEME_DIR = f'{CWD}{_sep}themes'
-RESOURCE_DIR = f'{THEME_DIR}{_sep}resources'
-LOG_PATH = f'{CWD}{_sep}pyplayer.log'
-CONFIG_PATH = f'{CWD}{_sep}config.ini'
-PID_PATH = f'{TEMP_DIR}{_sep}{os.getpid()}.pid'
 
-for _dir in (TEMP_DIR, PROBE_DIR, THUMBNAIL_DIR, THEME_DIR):
-    try: os.makedirs(_dir)
+# Directory setup
+if IS_COMPILED and hasattr(sys, '_MEIPASS'):
+    # PyInstaller 6.x
+    BIN_DIR = RESOURCE_BASE
+else:
+    # PyInstaller 5.x or development
+    BIN_DIR = f'{CWD}{_sep}{"PyQt5" if IS_COMPILED else "bin"}'
+
+TEMP_DIR = os.path.join(BIN_DIR, 'temp')
+PROBE_DIR = os.path.join(TEMP_DIR, 'probed')
+THUMBNAIL_DIR = os.path.join(TEMP_DIR, 'thumbnails')
+
+# Theme directory - use RESOURCE_BASE for PyInstaller 6.x
+THEME_DIR = os.path.join(RESOURCE_BASE, 'themes')
+RESOURCE_DIR = os.path.join(THEME_DIR, 'resources')
+LOG_PATH = os.path.join(CWD, 'pyplayer.log')
+CONFIG_PATH = os.path.join(CWD, 'config.ini')
+PID_PATH = os.path.join(TEMP_DIR, f'{os.getpid()}.pid')
+
+for _dir in (TEMP_DIR, PROBE_DIR, THUMBNAIL_DIR):
+    try: os.makedirs(_dir, exist_ok=True)
+    except: continue
+
+# Don't create THEME_DIR if using bundled themes (PyInstaller 6.x)
+if not (IS_COMPILED and hasattr(sys, '_MEIPASS')):
+    try: os.makedirs(THEME_DIR, exist_ok=True)
     except: continue
 
 # ---------------------
