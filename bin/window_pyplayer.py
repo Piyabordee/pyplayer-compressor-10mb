@@ -363,6 +363,7 @@ class Ui_MainWindow(object):
         self.actionFadeBoth.setObjectName("actionFadeBoth")
         self.actionTrimAuto = QtWidgets.QAction(MainWindow)
         self.actionTrimAuto.setCheckable(True)
+        self.actionTrimAuto.setChecked(True)  # Changed: Auto trim is now default
         self.actionTrimAuto.setObjectName("actionTrimAuto")
         self.actionResize = QtWidgets.QAction(MainWindow)
         self.actionResize.setObjectName("actionResize")
@@ -370,7 +371,7 @@ class Ui_MainWindow(object):
         self.actionCheckForUpdates.setObjectName("actionCheckForUpdates")
         self.actionTrimPrecise = QtWidgets.QAction(MainWindow)
         self.actionTrimPrecise.setCheckable(True)
-        self.actionTrimPrecise.setChecked(True)
+        self.actionTrimPrecise.setChecked(False)  # Changed: Not default anymore
         self.actionTrimPrecise.setObjectName("actionTrimPrecise")
         self.actionClearMarked = QtWidgets.QAction(MainWindow)
         self.actionClearMarked.setObjectName("actionClearMarked")
@@ -400,7 +401,7 @@ class Ui_MainWindow(object):
         self.actionCutFile.setObjectName("actionCutFile")
         self.actionTrimPickEveryTime = QtWidgets.QAction(MainWindow)
         self.actionTrimPickEveryTime.setCheckable(True)
-        self.actionTrimPickEveryTime.setChecked(True)
+        self.actionTrimPickEveryTime.setChecked(False)  # Changed: Don't show dialog every time
         self.actionTrimPickEveryTime.setObjectName("actionTrimPickEveryTime")
         self.actionViewLastDirectory = QtWidgets.QAction(MainWindow)
         self.actionViewLastDirectory.setObjectName("actionViewLastDirectory")

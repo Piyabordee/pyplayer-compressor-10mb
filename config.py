@@ -51,7 +51,7 @@ def loadConfig(gui, filename: str = constants.CONFIG_PATH) -> ConfigParseBetterQ
     gui.sliderVolume.setEnabled(not load('muted', False))
     # frameQuickChecks removed from UI (gridLayout_6 removed)
     # cfg.loadQt(gui.frameQuickChecks)
-    load('trimmodeselected', False)
+    load('trimmodeselected', True)  # Changed: Skip trim mode dialog by default
     gui.auto_compress_after_trim = load('auto_compress_after_trim', True)  # NEW: Default to ON
     load('ffmpegwarningignored', False)
     load('minimizedtotraywarningignored', False)
