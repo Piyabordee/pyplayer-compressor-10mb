@@ -4733,7 +4733,8 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         valid_extensions: tuple[str] = constants.ALL_MEDIA_EXTENSIONS,
         preferred_extensions: tuple[str] = None,
         ext_hint: str = None,
-        unique_default: bool = False
+        unique_default: bool = False,
+        open_after_save: bool | None = None
     ) -> bool | None:
         ''' Checks for any edit operations, applies them to the current media,
             and saves the new file to `dest`. If `dest` is None, `save_as()`
@@ -4743,6 +4744,10 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             extension is already valid. If `dest` has no extension, `ext_hint`
             will be used. If `ext_hint` is None, PyPlayer will guess the
             extension. `unique_default` is passed to `save_as()` if necessary.
+
+            `open_after_save` controls whether the saved file is automatically
+            opened after saving. None (default) means auto-open if the saved
+            file is the same as the current media. False disables auto-open.
 
             NOTE: Saving occurs in a separate thread. '''
 
@@ -4829,11 +4834,11 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             return marquee('No changes have been made.', log=False)
 
         # do actual saving in separate thread
-        Thread(target=self._save, args=(dest, operations), daemon=True).start()
+        Thread(target=self._save, args=(dest, operations, open_after_save), daemon=True).start()
         return True
 
 
-    def _save(self, dest: str = None, operations: dict = {}):
+    def _save(self, dest: str = None, operations: dict = {}, open_after_save: bool | None = None):
         ''' Do not call this directly. Use `save()` instead. Iteration: VII '''
         start_time = get_time()
         successful = True
@@ -4853,7 +4858,8 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
         audio_track_titles: list[str] = [id_and_title[-1] for id_and_title in list(player.get_audio_tracks())[1:]]
 
         # what will we do to our output and original files after saving? (NOTE: concatenation will override these)
-        open_after_save = None                                  # None means we'll decide after the edit finishes
+        if open_after_save is None:                             # None means we'll decide after the edit finishes
+            open_after_save = None
         explore_after_save = False
         delete_mode = 0  # checkDeleteOriginal removed from UI (0 = no deletion)
 
@@ -6355,7 +6361,8 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
             # Step 3: Save the trimmed video to temp location first
             # We use save() which handles all the trim operations
-            save_result = self.save(dest=temp_trimmed)
+            # Pass open_after_save=False to prevent auto-opening the temp file
+            save_result = self.save(dest=temp_trimmed, open_after_save=False)
 
             if not save_result:
                 # Save was cancelled or failed
@@ -6424,17 +6431,14 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
                 if not success:
                     # Compression failed - reset trim mode
                     logging.error(f'Compression failed: {error}')
+                    # Note: Main window will be shown back and error dialog shown by _handle_compression_completion
                     self._reset_trim_mode()
                     self.buttonTrimSave.setVisible(False)
                     return
 
-                # Step 7: Success! Show status and open the compressed file
+                # Step 7: Success! Show status (file opening handled by _handle_compression_completion)
                 logging.info(f'Successfully trimmed and compressed: {compressed_output}')
                 show_on_statusbar(f'Trimmed and compressed: {os.path.basename(compressed_output)}', 5000)
-
-                # Open the compressed file
-                logging.info(f'Opening compressed file: {compressed_output}')
-                self.open(compressed_output)
 
                 # Finally, reset trim mode
                 self._reset_trim_mode()
@@ -7824,10 +7828,18 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
 
         # Create and show progress dialog (modeless so it doesn't block)
         dialog = CompressProgressDialog(self, input_path)
+
+        # Hide main window during compression
+        self.hide()
+
+        # Show progress dialog (now only this is visible)
         dialog.show()
 
         # Keep dialog reference for the thread
         self._compression_dialog = dialog
+
+        # Store output path to open later
+        self._compression_output_path = output_path
 
         # Progress callback using Qt's thread-safe method
         def progress_callback(percent: int):
@@ -7892,11 +7904,23 @@ class GUI_Instance(QtW.QMainWindow, Ui_MainWindow):
             self._compression_dialog.deleteLater()
             self._compression_dialog = None
 
-        # Note: Error handling and file opening are done in the completion_callback
-        # which was passed to _compress_with_progress
-        # We just emit a signal or call the callback directly here
+        # Show main window back (it was hidden during compression)
+        self.show()
+        logging.info('Main window restored after compression')
 
-        # Find and call the stored completion callback
+        # If successful, open the compressed file
+        if success and hasattr(self, '_compression_output_path'):
+            output_path = self._compression_output_path
+            self._compression_output_path = None
+            logging.info(f'Opening compressed file: {output_path}')
+            self.open(output_path)
+        elif not success:
+            # Show error if compression failed
+            self._show_compress_error_dialog(error)
+            self._cleanup_temp_files(getattr(self, '_compression_output_path', ''))
+
+        # Call the stored completion callback if provided
+        # This handles trim mode reset, cleanup, etc.
         if hasattr(self, '_compression_completion_callback'):
             callback = self._compression_completion_callback
             self._compression_completion_callback = None  # Clear reference
