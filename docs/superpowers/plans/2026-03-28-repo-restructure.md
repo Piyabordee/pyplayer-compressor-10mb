@@ -186,19 +186,19 @@ from pyplayer.core import ffmpeg as _ffmpeg_module  # lazy to avoid circular
 from pyplayer import resource_helper
 ```
 
-**IMPORTANT:** `constants.py` imports `util` at module level for `ffmpeg()` and `kill_process()`. This creates a potential circular import. The solution:
-- Keep the `util` import as-is in the OLD `constants.py` (don't break existing code)
+**IMPORTANT:** `constants.py` imports `qthelpers` at module level (for `getPopupOkCancel()` used in FFmpeg/FFprobe missing dialogs). This creates a circular dependency with `qthelpers.py` (which imports `constants`). The solution:
+- Keep the `qthelpers` import as-is in the OLD `constants.py` (don't break existing code)
 - In the NEW `src/pyplayer/constants.py`, defer the import:
 
 ```python
-# At top of file, replace `import util` with:
-def _get_ffmpeg():
+# At top of file, replace `import qthelpers` with:
+def _get_qthelpers():
     """Lazy import to avoid circular dependency at module load."""
-    from pyplayer.core import ffmpeg
-    return ffmpeg
+    from pyplayer.gui import helpers as qthelpers
+    return qthelpers
 ```
 
-Then replace all `util.ffmpeg(` calls with `_get_ffmpeg().ffmpeg(` and `util.kill_process(` with `_get_ffmpeg().kill_process(`.
+Then replace all `qthelpers.getPopupOkCancel(` calls with `_get_qthelpers().getPopupOkCancel(`.
 
 - [ ] **Step 3: Verify no syntax errors**
 
@@ -232,7 +232,18 @@ python -c "from pyplayer import resource_helper; print('OK')"
 cp update.py src/pyplayer/update.py
 ```
 
-- [ ] **Step 2: Update imports: `import constants` → `from pyplayer import constants`, `import util` → `from pyplayer.core import ffmpeg`**
+- [ ] **Step 2: Update imports: `import constants` → `from pyplayer import constants`, `import util` → `from pyplayer.core import ffmpeg`, `import qtstart` → `from pyplayer import app as qtstart`**
+
+**Note:** `update.py` line 6 imports `qtstart` to call `qtstart.exit()`. In the new structure, the `exit()` function lives in `pyplayer.gui.tray`. Update the reference accordingly:
+```python
+# OLD:
+import qtstart
+# ... later: qtstart.exit(gui)
+
+# NEW:
+from pyplayer.gui.tray import exit as app_exit
+# ... later: app_exit(gui)
+```
 
 - [ ] **Step 3: Verify import**
 
@@ -240,7 +251,41 @@ cp update.py src/pyplayer/update.py
 python -c "from pyplayer import update; print('OK')"
 ```
 
-### Task 5: Move `bin/configparsebetter.py` → `core/config_parser.py`
+### Task 5: Move `config.py`
+
+**IMPORTANT:** `config.py` is NOT just a simple copy — it has significant import dependencies:
+- `from bin.configparsebetter import ConfigParseBetterQt` → `from pyplayer.core.config_parser import ConfigParseBetterQt`
+- `import constants` → `from pyplayer import constants`
+- `import qthelpers` → `from pyplayer.gui import helpers as qthelpers`
+- The module-level `cfg` singleton is imported by other modules at runtime
+
+- [ ] **Step 1: Copy to package**
+
+```bash
+cp config.py src/pyplayer/config.py
+```
+
+- [ ] **Step 2: Update imports in `src/pyplayer/config.py`**
+
+```python
+# OLD:
+from bin.configparsebetter import ConfigParseBetterQt
+import constants
+import qthelpers
+
+# NEW:
+from pyplayer.core.config_parser import ConfigParseBetterQt
+from pyplayer import constants
+from pyplayer.gui import helpers as qthelpers
+```
+
+- [ ] **Step 3: Verify import**
+
+```bash
+python -c "from pyplayer import config; print('OK')"
+```
+
+### Task 6: Move `bin/configparsebetter.py` → `core/config_parser.py`
 
 - [ ] **Step 1: Copy to core package**
 
@@ -256,7 +301,7 @@ cp bin/configparsebetter.py src/pyplayer/core/config_parser.py
 python -c "from pyplayer.core.config_parser import ConfigParseBetterQt; print('OK')"
 ```
 
-### Task 6: Move `bin/window_*.py` → `ui/`
+### Task 7: Move `bin/window_*.py` → `ui/`
 
 - [ ] **Step 1: Copy all generated UI files**
 
@@ -275,7 +320,7 @@ cp bin/window_timestamp.py src/pyplayer/ui/window_timestamp.py
 python -c "from pyplayer.ui.window_about import Ui_Dialog; print('OK')"
 ```
 
-### Task 7: Move `compression.py` → `core/compression.py`
+### Task 8: Move `compression.py` → `core/compression.py`
 
 - [ ] **Step 1: Copy to core**
 
@@ -291,18 +336,20 @@ cp compression.py src/pyplayer/core/compression.py
 python -c "from pyplayer.core.compression import compress_video; print('OK')"
 ```
 
-### Task 8: Commit Phase 2
+### Task 9: Commit Phase 2
 
 - [ ] **Step 1: Stage and commit**
 
 ```bash
 git add src/pyplayer/constants.py src/pyplayer/resource_helper.py src/pyplayer/update.py \
+        src/pyplayer/config.py \
         src/pyplayer/core/config_parser.py src/pyplayer/core/compression.py \
         src/pyplayer/ui/window_*.py
 git commit -m "refactor: move independent modules into package (Phase 2)
 
-Moves constants, resource_helper, update, config_parser, compression,
-and UI files into src/pyplayer/ without changing existing entry point.
+Moves constants, resource_helper, update, config, config_parser,
+compression, and UI files into src/pyplayer/ without changing
+existing entry point.
 
 Spec: docs/superpowers/specs/2026-03-28-repo-restructure-design.md"
 ```
@@ -408,6 +455,8 @@ Spec: docs/superpowers/specs/2026-03-28-repo-restructure-design.md"
 
 ## Chunk 4: Split `widgets.py` (Phase 4)
 
+**NOTE:** `widgets.py` line 13 imports `qtstart` — used for `qtstart.exit()`. In the new structure, replace with `from pyplayer.gui.tray import exit as app_exit` or use the `helpers` module alias.
+
 ### Task 13: Create `widgets/player_backend.py`
 
 **Files:**
@@ -466,15 +515,11 @@ app = None
 cfg = None
 settings = None
 
-# Zoom constants
-ZOOM_STEP = 0.25
-ZOOM_MINIMUM_FACTOR = 0.25
-ZOOM_MAXIMUM_FACTOR = 10.0
-
+# Zoom constants (from widgets.py lines 48-51)
 ZOOM_DYNAMIC_FIT = 0
-ZOOM_NO_SCALING = 1
-ZOOM_FIT = 2
-ZOOM_FILL = 3
+ZOOM_NO_SCALING  = 1
+ZOOM_FIT         = 2
+ZOOM_FILL        = 3
 
 
 def set_aliases(gui_instance, app_instance, cfg_instance, settings_instance):
@@ -508,7 +553,6 @@ from pyplayer.widgets.draggable import QDraggableWindowFrame
 from pyplayer.widgets.helpers import (
     gui, app, cfg, settings,
     set_aliases,
-    ZOOM_STEP, ZOOM_MINIMUM_FACTOR, ZOOM_MAXIMUM_FACTOR,
     ZOOM_DYNAMIC_FIT, ZOOM_NO_SCALING, ZOOM_FIT, ZOOM_FILL,
 )
 
@@ -607,6 +651,8 @@ Add to `core/media_utils.py`:
 - [ ] **Update imports: `import constants` → `from pyplayer import constants`, etc.**
 - [ ] **Move `foreground_is_fullscreen()` and `get_font_path()` from `util.py` here** (Windows-specific, Qt-adjacent)
 
+**NOTE:** Keep the OLD `qthelpers.py` file in place until Phase 7. Other modules (`constants.py`, `config.py`, etc.) still import from it. The old file is only safe to delete after all consumers are updated.
+
 ### Task 25: Commit Phase 5a
 
 ```bash
@@ -689,7 +735,7 @@ git commit -m "refactor: create all 8 mixin files from GUI_Instance (Phase 5b)
 
 Creates PlaybackMixin (20), EditingMixin (20), SavingMixin (12),
 FileManagementMixin (22), MenuMixin (25), ThemeMixin (4),
-EventMixin (10), DialogMixin (18), UIStateMixin (27).
+EventMixin (10), DialogMixin (18), UIStateMixin (27) — 9 mixins total.
 
 Spec: docs/superpowers/specs/2026-03-28-repo-restructure-design.md"
 ```
@@ -960,6 +1006,20 @@ a = Analysis([os.path.join(ROOT_DIR, 'bin', 'updater.py')], ...)
 # Note: updater.py stays in bin/ until cleanup phase
 ```
 
+- [ ] **Step 5: Update `build_installer.bat` at repo root — replace all `executable` references with `packaging`**
+
+```
+# OLD:
+cd /d "%PROJECT_DIR%\executable"
+"%INNO_COMPILER%" "%PROJECT_DIR%\executable\installer.iss"
+# ... and all other references to executable\
+
+# NEW:
+cd /d "%PROJECT_DIR%\packaging"
+"%INNO_COMPILER%" "%PROJECT_DIR%\packaging\installer.iss"
+# ... and all other references to packaging\
+```
+
 ### Task 45: Move `.ui` files → `ui_sources/`
 
 ```bash
@@ -969,10 +1029,10 @@ cp bin/*.ui ui_sources/
 
 ### Task 46: Move assets
 
+**NOTE:** Do NOT move `themes/resources/` — it is referenced at runtime by `resource_helper.py`, `constants.py`, and all PyInstaller spec files. Only move design files.
+
 ```bash
-mkdir -p assets/icons assets/logos
-cp themes/resources/*.png assets/icons/
-cp themes/resources/*.ico assets/icons/
+mkdir -p assets/logos
 cp bin/*.pdn assets/logos/
 ```
 
@@ -1150,7 +1210,7 @@ Spec: docs/superpowers/specs/2026-03-28-repo-restructure-design.md"
 
 | Directory | Files Created | Purpose |
 |-----------|--------------|---------|
-| `src/pyplayer/` | 5 | Package root (__init__, __main__, app, config, constants) |
+| `src/pyplayer/` | 6 | Package root (__init__, __main__, app, config, constants, resource_helper, update) |
 | `src/pyplayer/core/` | 7 | Business logic (edit, ffmpeg, file_ops, media_utils, compression, config_parser, probe) |
 | `src/pyplayer/gui/` | 6 | Main window + helpers (main_window, helpers, progress, signals, shortcuts, tray) |
 | `src/pyplayer/gui/mixins/` | 9 | Mixin files (playback, editing, saving, file_management, menus, themes, events, dialogs, ui_state) |
@@ -1161,7 +1221,7 @@ Spec: docs/superpowers/specs/2026-03-28-repo-restructure-design.md"
 | `assets/` | moved | Icons, logos |
 | `scripts/` | 1 | convert_ui.py |
 | `tests/` | 1 | __init__.py (placeholder) |
-| **Total** | **~52 new files** | |
+| **Total** | **~53 new files** | |
 
 ---
 
