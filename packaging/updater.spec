@@ -17,7 +17,7 @@ VERSION_FILE = os.path.join(CWD, 'version_info_updater.txt')
 ICON = os.path.join(ROOT_DIR, 'themes', 'resources', 'updater.ico')
 
 
-a = Analysis([os.path.join(ROOT_DIR, 'bin', 'updater.py')],
+a = Analysis([os.path.join(ROOT_DIR, 'src', 'pyplayer', 'updater_cli.py')],
              pathex=[],
              binaries=[],
              datas=[],
