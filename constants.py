@@ -75,7 +75,7 @@ for _dir in (TEMP_DIR, PROBE_DIR, THUMBNAIL_DIR):
 # Don't create THEME_DIR if using bundled themes (PyInstaller 6.x)
 if not (IS_COMPILED and hasattr(sys, '_MEIPASS')):
     try: os.makedirs(THEME_DIR, exist_ok=True)
-    except: continue
+    except: pass
 
 # ---------------------
 
