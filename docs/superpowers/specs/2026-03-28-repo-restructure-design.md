@@ -56,7 +56,8 @@ pyplayer/                              # repo root
 │       │   ├── mixins/
 │       │   │   ├── __init__.py
 │       │   │   ├── playback.py        # play, pause, stop, volume, tracks, rate, fullscreen
-│       │   │   ├── editing.py         # trim, crop, save, compress, concat, rotate, audio edits
+│       │   │   ├── editing.py         # trim, crop, edit queue, progress tracking (~20 methods, ~700 lines)
+│       │   │   ├── saving.py          # save, _save (~783 lines alone), save_as, compress, concat (~12 methods, ~1,100 lines)
 │       │   │   ├── file_management.py # open, folder, recent, search, subtitles, rename, delete
 │       │   │   ├── menus.py           # context menus, taskbar controls, refresh_* methods
 │       │   │   ├── themes.py          # load_themes, set_theme, refresh_theme_combo
@@ -69,14 +70,22 @@ pyplayer/                              # repo root
 │       │   └── progress.py            # CompressProgressDialog class
 │       │
 │       ├── widgets/                   # custom Qt widgets (from widgets.py)
-│       │   ├── __init__.py            # re-exports all public classes
-│       │   ├── video_player.py        # PyPlayerBackend, PlayerVLC, PlayerQt, QVideoPlayer, QVideoPlayerLabel
-│       │   ├── video_slider.py        # QVideoSlider
+│       │   ├── __init__.py            # re-exports all public classes + runtime aliases
+│       │   ├── player_backend.py      # PyPlayerBackend (abstract), PlayerVLC, PlayerQt (~1,307 lines)
+│       │   ├── player_widget.py       # QVideoPlayer widget (~687 lines)
+│       │   ├── player_label.py        # QVideoPlayerLabel display label (~519 lines)
+│       │   ├── video_slider.py        # QVideoSlider (~400 lines)
 │       │   ├── video_list.py          # QVideoListItemWidget, QVideoList
 │       │   ├── overlays.py            # QTextOverlayPreview, QTextOverlay, QColorPickerButton
 │       │   ├── inputs.py              # QKeySequenceFlexibleEdit, passthrough widgets
 │       │   ├── draggable.py           # QDraggableWindowFrame
-│       │   └── helpers.py             # widget utility functions
+│       │   └── helpers.py             # module-level aliases (gui, app, cfg, settings) + ZOOM_* constants
+
+**`widgets/helpers.py` contents:**
+- Module-level aliases: `gui`, `app`, `cfg`, `settings` (set at runtime by `app.py`)
+- `ZOOM_STEP`, `ZOOM_MINIMUM_FACTOR`, `ZOOM_MAXIMUM_FACTOR` constants
+- `set_aliases(gui_instance, app_instance, cfg_instance, settings_instance)` function
+  called from `app.py` after MainWindow creation to populate runtime aliases
 │       │
 │       └── ui/                        # generated UI files (from bin/)
 │           ├── __init__.py
@@ -149,6 +158,7 @@ The core architectural decision is decomposing the 164-method `GUI_Instance` cla
 # gui/main_window.py
 from .mixins.playback import PlaybackMixin
 from .mixins.editing import EditingMixin
+from .mixins.saving import SavingMixin
 from .mixins.file_management import FileManagementMixin
 from .mixins.menus import MenuMixin
 from .mixins.themes import ThemeMixin
@@ -158,6 +168,7 @@ from .mixins.dialogs import DialogMixin
 class MainWindow(
     PlaybackMixin,
     EditingMixin,
+    SavingMixin,
     FileManagementMixin,
     MenuMixin,
     ThemeMixin,
@@ -183,13 +194,14 @@ class MainWindow(
 |--------|-------|---------|
 | **`main_window.py`** | 7 | `__init__`, `setup`, `restart`, `restore`, `external_command_interface_thread`, `event`, `set_player` |
 | **`mixins/playback.py`** | 20 | `pause`, `force_pause`, `stop`, `set_volume`, `set_volume_boost`, `set_mute`, `toggle_mute`, `set_playback_rate`, `set_subtitle_delay`, `set_audio_delay`, `set_fullscreen`, `toggle_maximized`, `set_track`, `cycle_track`, `restore_tracks`, `page_step`, `navigate`, `update_gif_progress`, `update_progress`, `_update_progress_slot` |
-| **`mixins/editing.py`** | 32 | `set_trim`, `_reset_trim_mode`, `save_from_trim_button`, `set_trim_mode`, `save`, `_save`, `save_as`, `concatenate`, `resize_media`, `rotate_video`, `add_audio`, `amplify_audio`, `replace_audio`, `isolate_track`, `add_text`, `set_crop_mode`, `disable_crop_mode`, `cancel_all`, `pause_all`, `add_edit`, `remove_edit`, `get_edit_with_priority`, `cycle_edit_priority`, `reset_edit_priority`, `hide_edit_progress`, `update_time_spins`, `update_frame_spin`, `manually_update_current_time`, `_cleanup_edit_output`, `is_safe_to_edit`, `_compress_with_progress`, `_handle_compression_completion` |
+| **`mixins/editing.py`** | 20 | `set_trim`, `_reset_trim_mode`, `set_trim_mode`, `set_crop_mode`, `disable_crop_mode`, `cancel_all`, `pause_all`, `add_edit`, `remove_edit`, `get_edit_with_priority`, `cycle_edit_priority`, `reset_edit_priority`, `hide_edit_progress`, `_cleanup_edit_output`, `is_safe_to_edit`, `update_time_spins`, `update_frame_spin`, `manually_update_current_time`, `_compress_with_progress`, `_handle_compression_completion` |
+| **`mixins/saving.py`** | 12 | `save`, `_save`, `save_as`, `save_from_trim_button`, `concatenate`, `resize_media`, `rotate_video`, `add_audio`, `amplify_audio`, `replace_audio`, `isolate_track`, `add_text` |
 | **`mixins/file_management.py`** | 22 | `open`, `_open_cleanup_slot`, `open_from_thread`, `_open_external_command_slot`, `open_folder`, `open_probe_file`, `open_recent_file`, `parse_media_file`, `search_files`, `cycle_media`, `cycle_recent_files`, `shuffle_media`, `add_subtitle_files`, `discover_subtitle_files`, `explore`, `copy`, `copy_file`, `copy_image`, `rename`, `undo_rename`, `delete`, `snapshot` |
 | **`mixins/menus.py`** | 25 | `dockControlsResizeEvent`, `frameProgressContextMenuEvent`, `trimButtonContextMenuEvent`, `buttonMediaLocationContextMenuEvent`, `buttonMarkDeletedContextMenuEvent`, `buttonSnapshotContextMenuEvent`, `buttonAutoplayContextMenuEvent`, `cycleButtonContextMenuEvent`, `menuRecentContextMenuEvent`, `frameVolumeContextMenuEvent`, `frameVolumeMousePressEvent`, `buttonPauseContextMenuEvent`, `buttonPauseMousePressEvent`, `editProgressBarContextMenuEvent`, `editProgressBarMouseReleaseEvent`, `contextMenuEvent`, `create_taskbar_controls`, `enable_taskbar_controls`, `refresh_taskbar`, `handle_cycle_buttons`, `handle_snapshot_button`, `setup_trim_button_custom_handler`, `refresh_track_menu`, `refresh_recent_menu`, `refresh_undo_menu` |
 | **`mixins/themes.py`** | 4 | `load_themes`, `refresh_theme_combo`, `get_theme`, `set_theme` |
-| **`mixins/events.py`** | 9 | `closeEvent`, `hideEvent`, `showEvent`, `leaveEvent`, `moveEvent`, `resizeEvent`, `timerEvent`, `wheelEvent`, `keyPressEvent`, `keyReleaseEvent` |
-| **`mixins/dialogs.py`** | 20 | `show_about_dialog`, `show_timestamp_dialog`, `show_trim_dialog`, `show_size_dialog`, `show_search_popup`, `show_delete_prompt`, `browse_for_directory`, `browse_for_save_file`, `browse_for_subtitle_files`, `_show_ffmpeg_missing_dialog`, `_show_duration_error_dialog`, `_show_compress_error_dialog`, `_cleanup_temp_files`, `marquee`, `_log_on_statusbar_slot`, `handle_updates`, `_handle_updates`, `add_info_actions`, `convert_snapshot_to_jpeg` |
-| **`mixins/ui_state.py`** | 25 | `set_advancedcontrols_visible`, `set_progressbar_visible`, `set_statusbar_visible`, `set_menubar_visible`, `refresh_copy_image_action`, `refresh_shortcuts`, `refresh_cover_art`, `refresh_autoplay_button`, `refresh_confusing_zoom_setting_tooltip`, `refresh_recycle_tooltip`, `refresh_volume_tooltip`, `refresh_marked_for_deletion_tooltip`, `refresh_snapshot_button_controls`, `is_snap_mode_enabled`, `snap_to_player_size`, `snap_to_native_size`, `mark_for_deletion`, `clear_marked_for_deletion`, `get_output`, `get_save_remnant`, `get_popup_location_kwargs`, `get_hotkey_full_string`, `get_new_file_timestamps`, `set_file_timestamps`, `_refresh_title_slot` |
+| **`mixins/events.py`** | 10 | `closeEvent`, `hideEvent`, `showEvent`, `leaveEvent`, `moveEvent`, `resizeEvent`, `timerEvent`, `wheelEvent`, `keyPressEvent`, `keyReleaseEvent` |
+| **`mixins/dialogs.py`** | 18 | `show_about_dialog`, `show_timestamp_dialog`, `show_trim_dialog`, `show_size_dialog`, `show_search_popup`, `show_delete_prompt`, `browse_for_directory`, `browse_for_save_file`, `browse_for_subtitle_files`, `_show_ffmpeg_missing_dialog`, `_show_duration_error_dialog`, `_show_compress_error_dialog`, `_cleanup_temp_files`, `handle_updates`, `_handle_updates`, `add_info_actions`, `convert_snapshot_to_jpeg`, `_show_color_picker` |
+| **`mixins/ui_state.py`** | 27 | `set_advancedcontrols_visible`, `set_progressbar_visible`, `set_statusbar_visible`, `set_menubar_visible`, `refresh_copy_image_action`, `refresh_shortcuts`, `refresh_cover_art`, `refresh_autoplay_button`, `refresh_confusing_zoom_setting_tooltip`, `refresh_recycle_tooltip`, `refresh_volume_tooltip`, `refresh_marked_for_deletion_tooltip`, `refresh_snapshot_button_controls`, `is_snap_mode_enabled`, `snap_to_player_size`, `snap_to_native_size`, `mark_for_deletion`, `clear_marked_for_deletion`, `get_output`, `get_save_remnant`, `get_popup_location_kwargs`, `get_hotkey_full_string`, `get_new_file_timestamps`, `set_file_timestamps`, `_refresh_title_slot`, **`marquee`**, **`_log_on_statusbar_slot`** |
 | **`signals.py`** | 1 (function) | `connect_widget_signals()` |
 | **`shortcuts.py`** | 1 (function) | `connect_shortcuts()` |
 | **`tray.py`** | 2 (functions) | `exit()`, `get_tray_icon()` |
@@ -275,11 +287,11 @@ class MainWindow(
 
 | Class | Target Module | Lines (~) | Notes |
 |-------|--------------|-----------|-------|
-| `PyPlayerBackend` | `widgets/video_player.py` | 320 | Abstract backend |
-| `PlayerVLC` | `widgets/video_player.py` | 750 | VLC implementation |
-| `PlayerQt` | `widgets/video_player.py` | 240 | Qt multimedia implementation |
-| `QVideoPlayer` | `widgets/video_player.py` | 680 | Main player widget |
-| `QVideoPlayerLabel` | `widgets/video_player.py` | 520 | Video display label |
+| `PyPlayerBackend` | `widgets/player_backend.py` | 323 | Abstract backend |
+| `PlayerVLC` | `widgets/player_backend.py` | 744 | VLC implementation |
+| `PlayerQt` | `widgets/player_backend.py` | 240 | Qt multimedia implementation |
+| `QVideoPlayer` | `widgets/player_widget.py` | 687 | Main player widget |
+| `QVideoPlayerLabel` | `widgets/player_label.py` | 519 | Video display label |
 | `QVideoSlider` | `widgets/video_slider.py` | 400 | Custom seek bar |
 | `QVideoListItemWidget` | `widgets/video_list.py` | 40 | Concat list item |
 | `QVideoList` | `widgets/video_list.py` | 270 | Concat list widget |
@@ -292,6 +304,19 @@ class MainWindow(
 | `QDraggableWindowFrame` | `widgets/draggable.py` | 200 | Draggable frame widget |
 
 **Module-level aliases in `widgets.py`** (`gui`, `app`, `cfg`, `settings`, `ZOOM_*` constants) are set by `main.pyw` at runtime. These must be relocated to `widgets/__init__.py` and the alias-setting mechanism updated in `app.py`.
+
+### main.pyw top-level functions (6 functions, outside any class)
+
+These functions currently live at module-level in `main.pyw` before the `GUI_Instance` class definition.
+
+| Function | Lines | Target Module | Notes |
+|----------|-------|--------------|-------|
+| `probe_files()` | ~100 | `core/probe.py` | Media file probing (ffprobe), returns dict of metadata |
+| `get_audio_duration()` | ~15 | `core/media_utils.py` | Get duration via ffprobe |
+| `get_image_data()` | ~12 | `core/media_utils.py` | Read image file bytes |
+| `get_PIL_safe_path()` | ~20 | `core/media_utils.py` | PIL-compatible path handling |
+| `splitext_media()` | ~52 | `core/media_utils.py` | Media-aware path splitting (handles .tar.gz, multi-dot extensions) |
+| `close_handle()` | ~8 | `core/file_ops.py` | Windows file handle cleanup |
 
 ### qtstart.py per-function mapping
 
@@ -388,6 +413,12 @@ build = ["pyinstaller>=5.13.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+# Themes are loaded at runtime from the themes/ directory
+# These are NOT inside the package — PyInstaller collects them separately.
+# This section is for any package-internal data files (if needed in future).
+pyplayer = ["py.typed"]
 ```
 
 ### PyInstaller spec updates
@@ -396,6 +427,15 @@ where = ["src"]
 - Update `hook.py` to use new module paths
 - Update `exclude.txt` with new module structure
 - Update `version_info` file paths
+- **Runtime data files** — themes, icons, and VLC plugins are loaded from external directories (not packaged as Python modules). These must be collected via PyInstaller's `datas=[]` in the spec file:
+  ```python
+  datas = [
+      ('themes/', 'themes/'),           # theme .txt files
+      ('themes/resources/', 'themes/resources/'),  # icons, logos
+      ('packaging/include/', 'include/'),          # VLC binaries
+  ]
+  ```
+  These are **not** inside `src/pyplayer/` because they are loaded by file path at runtime, not via Python import.
 
 ---
 
@@ -455,6 +495,27 @@ The migration must be done in phases to ensure the application works at each ste
 3. Move assets → `assets/`
 4. Update `build.py`, `.spec` files, and `hook.py` for new module paths
 5. Update `convert_ui_to_py.py` → `scripts/convert_ui.py`
+6. **Update `.gitignore`** — add these entries:
+   ```
+   # Build outputs
+   packaging/build/
+   packaging/compiling/
+   packaging/installer_output/
+
+   # Python
+   __pycache__/
+   *.pyc
+   dist/
+   *.egg-info/
+
+   # IDE
+   .vscode/
+   .idea/
+
+   # Runtime
+   pyplayer.log
+   config.ini
+   ```
 
 ### Phase 7: Cleanup
 1. Delete old files (`main.pyw`, `bin/`, `executable/`)
