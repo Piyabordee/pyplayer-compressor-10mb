@@ -33,6 +33,7 @@ pyplayer-master/
 ├── main.pyw                    # Entry point (531KB - contains most GUI logic)
 ├── config.py                   # Configuration loading/saving (ConfigParseBetter)
 ├── constants.py                # Global constants, paths, FFmpeg verification
+├── compression.py              # Video compression module (bitrate calc, FFmpeg wrapper)
 ├── util.py                     # Utility functions (FFmpeg wrappers, file ops)
 ├── qthelpers.py                # Qt utility functions and helpers
 ├── qtstart.py                  # Startup code, signal connections, tray icon
@@ -40,6 +41,7 @@ pyplayer-master/
 ├── update.py                   # Update checking and downloading
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # User-facing documentation
+├── GitHub_Release.md           # GitHub release guide
 │
 ├── bin/                        # UI components and utilities
 │   ├── window_*.py            # Generated from Qt Designer .ui files
@@ -82,6 +84,10 @@ main.pyw (entry point)
     │   ├─→ Path constants
     │   └─→ FFmpeg/FFprobe verification
     │
+    ├─→ compression.py
+    │   ├─→ Bitrate calculation (target ~10MB)
+    │   └─→ FFmpeg compression with progress callback
+    │
     └─→ widgets.py
         ├─→ QVideoPlayer (VLC wrapper)
         ├─→ QVideoSlider (custom progress bar)
@@ -96,6 +102,7 @@ main.pyw (entry point)
 | `QVideoPlayer` | `widgets.py` | VLC media player widget wrapper |
 | `QVideoSlider` | `widgets.py` | Custom seek bar with hover preview |
 | `ConfigParseBetterQt` | `bin/configparsebetter.py` | Configuration file management |
+| `compress_video()` | `compression.py` | Video compression with bitrate calculation |
 | `getPopup()` | `qthelpers.py` | Generic dialog creation |
 
 ---
@@ -256,9 +263,32 @@ Uses PyInstaller with:
    - Progress dialog shows compression status with polling mechanism
    - Cleanup of temporary files after compression
    - Modeless dialog allows continued use during compression
+   - Improved error handling and completion callback
+
+4. **Save workflow improvements**
+   - Option to control auto-opening of files after saving (config: `auto_open_after_save`)
+
+5. **Build & Compatibility**
+   - Enhanced compatibility with PyInstaller 5.x and 6.x for path resolution and resource management
+   - Improved build process with new scripts and resource management
+
+6. **UI Polish**
+   - Text color set to black for dialogs and progress indicators for better readability
+   - Auto-compress checkbox synchronized with loaded settings
+   - Improved error handling for theme directory creation
 
 **Recent Commits:**
 ```
+c5b669a - feat(docs): add GitHub release guide for PyPlayer Compressor 10MB
+b0adef1 - fix(constants): improve error handling for theme directory creation
+aad8f39 - feat(compatibility): enhance compatibility with PyInstaller 5.x and 6.x for path resolution and resource management
+81aec14 - feat(build): enhance build process with new scripts and resource management
+1177be3 - fix(ui): set text color to black for various UI elements in dialogs and progress indicators
+cc82a0c - feat(save): add option to control auto-opening of files after saving
+c91f4c6 - fix(compression): improve error handling and completion callback for video compression
+d4f57cc - fix(ui): synchronize auto-compress checkbox with loaded settings and improve compression handling
+85cbdea - refactor(logging): change info logs to debug for detailed tracing
+5058fff - fix(config): update default settings for trim mode and auto-compress
 7646912 - fix(ui): make compression dialog modeless
 3642d23 - fix(ui): add saving dialog during polling phase
 f542c1d - fix(compression): use glob pattern to find temp files
@@ -341,5 +371,5 @@ When working on this codebase:
 
 ---
 
-*Last Updated: 2026-03-25 (Updated with 31 recent commits)*
+*Last Updated: 2026-03-28 (Updated with 10 new commits, total 41 recent commits)*
 *Generated for: PyPlayer Compressor 0.6.0 beta*
