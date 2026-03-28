@@ -44,7 +44,7 @@ cd /d "%PROJECT_DIR%"
 REM Build with PyInstaller
 echo.
 echo [4/5] Building PyPlayer executable...
-cd /d "%PROJECT_DIR%\executable"
+cd /d "%PROJECT_DIR%\packaging"
 %PYTHON_EXE% build.py
 if errorlevel 1 (
     echo ERROR: PyInstaller build failed
@@ -64,7 +64,7 @@ if not exist "%INNO_COMPILER%" (
 )
 
 REM Build installer
-"%INNO_COMPILER%" "%PROJECT_DIR%\executable\installer.iss"
+"%INNO_COMPILER%" "%PROJECT_DIR%\packaging\installer.iss"
 if errorlevel 1 (
     echo ERROR: Inno Setup compilation failed
     pause
@@ -76,10 +76,10 @@ echo ============================================================
 echo BUILD SUCCESSFUL!
 echo ============================================================
 echo Output location:
-echo   - PyInstaller build: %PROJECT_DIR%\executable\compiled\
-echo   - Installer: %PROJECT_DIR%\executable\installer_output\
+echo   - PyInstaller build: %PROJECT_DIR%\packaging\compiled\
+echo   - Installer: %PROJECT_DIR%\packaging\installer_output\
 echo.
 echo Setup file:
-dir /b "%PROJECT_DIR%\executable\installer_output\*.exe"
+dir /b "%PROJECT_DIR%\packaging\installer_output\*.exe"
 echo.
 pause

@@ -1,0 +1,35 @@
+# UTF-8
+#
+# For more details about fixed file info:
+# http://msdn.microsoft.com/en-us/library/ms646997.aspx
+#
+# Translation: 0x0409 0x04e4
+#
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(0, 6, 0, 0),
+    prodvers=(0, 6, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        u'040904b0',
+        [StringStruct(u'CompanyName', u'Piyabordee'),
+        StringStruct(u'FileDescription', u'PyPlayer Compressor 10MB - Video player and compressor'),
+        StringStruct(u'FileVersion', u'0.6.0.0'),
+        StringStruct(u'InternalName', u'pyplayer'),
+        StringStruct(u'LegalCopyright', u'Copyright (C) 2024 Piyabordee. Based on PyPlayer by thisismy-github'),
+        StringStruct(u'OriginalFilename', u'pyplayer.exe'),
+        StringStruct(u'ProductName', u'PyPlayer Compressor'),
+        StringStruct(u'ProductVersion', u'0.6.0 beta')])
+      ]),
+    VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
+  ]
+)

@@ -50,6 +50,7 @@ desktop.ini
 
 # Project specific
 settings.json
+config.ini
 *.bak
 *.tmp
 
@@ -81,6 +82,16 @@ executable/*.spec.backup
 executable/installer_output/
 *.exe
 !updater.exe
+
+# ============================================================
+# Packaging (restructured from executable/)
+# ============================================================
+packaging/build/
+packaging/compiling/
+packaging/installer_output/
+packaging/__pycache__/
+packaging/compiled/
+packaging/dist/
 
 # Inno Setup temp files
 executable/*.~iss

@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>catDialog</class>
+ <widget class="QDialog" name="catDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>439</width>
+    <height>461</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">Videos to concatenate</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="topMargin">
+    <number>5</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
+   </property>
+   <property name="horizontalSpacing">
+    <number>2</number>
+   </property>
+   <property name="verticalSpacing">
+    <number>1</number>
+   </property>
+   <item row="8" column="1">
+    <widget class="QPushButton" name="delete">
+     <property name="maximumSize">
+      <size>
+       <width>24</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>Remove selected file(s)</string>
+     </property>
+     <property name="text">
+      <string notr="true">-</string>
+     </property>
+     <property name="shortcut">
+      <string>Del</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="6">
+    <spacer name="horizontalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::MinimumExpanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>15</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="8" column="5">
+    <widget class="QToolButton" name="recent">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>Click the arrow on the right to pick a file from your recent files list.
+
+Click the icon on the left to add your actual most recently played file
+(not including files played through this dialog). If no files have been
+played yet, then the first file in your recent files list is used instead.</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+L</string>
+     </property>
+     <property name="popupMode">
+      <enum>QToolButton::MenuButtonPopup</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="8">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>12</number>
+     </property>
+     <property name="topMargin">
+      <number>1</number>
+     </property>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkOpen">
+       <property name="toolTip">
+        <string>If checked, the concatenated video will
+automatically play in PyPlayer after saving.</string>
+       </property>
+       <property name="text">
+        <string>&amp;Play output</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkExplore">
+       <property name="toolTip">
+        <string>If checked, the concatenated video will
+automatically open in explorer after saving.</string>
+       </property>
+       <property name="text">
+        <string>&amp;Explore output</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkDelete">
+       <property name="toolTip">
+        <string>Tristate:
+
+Partially checked - videos will be marked
+for deletion after concatenation.
+
+Fully checked - videos will be immediately
+deleted after successful concatenation.
+
+Note: File deletion/recycling
+is dependent on your settings.</string>
+       </property>
+       <property name="text">
+        <string>&amp;Delete originals</string>
+       </property>
+       <property name="tristate">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="0">
+    <widget class="QPushButton" name="add">
+     <property name="maximumSize">
+      <size>
+       <width>24</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>Add file(s)</string>
+     </property>
+     <property name="text">
+      <string notr="true">+</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="4">
+    <widget class="QPushButton" name="reverse">
+     <property name="maximumSize">
+      <size>
+       <width>24</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>Reverse file order</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+R</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="8">
+    <widget class="QVideoList" name="videoList">
+     <property name="acceptDrops">
+      <bool>true</bool>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContents</enum>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::InternalMove</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+     <property name="movement">
+      <enum>QListView::Free</enum>
+     </property>
+     <property name="selectionRectVisible">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="8">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>1</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="output"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="browse">
+       <property name="maximumSize">
+        <size>
+         <width>26</width>
+         <height>22</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Browse for an output path</string>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+O</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="3">
+    <widget class="QPushButton" name="down">
+     <property name="maximumSize">
+      <size>
+       <width>24</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>Move selected file(s) down</string>
+     </property>
+     <property name="text">
+      <string notr="true">▼</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+Down</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="2">
+    <widget class="QPushButton" name="up">
+     <property name="maximumSize">
+      <size>
+       <width>24</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>Move selected file(s) up</string>
+     </property>
+     <property name="text">
+      <string notr="true">▲</string>
+     </property>
+     <property name="shortcut">
+      <string>Ctrl+Up</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="7">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save|QDialogButtonBox::SaveAll</set>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="8">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Videos will be concatenated from top to bottom</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="8">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QPushButton" name="buttonEncode">
+       <property name="toolTip">
+        <string>If checked, the concatenated video will be re-encoded
+to ensure precision and compatability with all formats.
+
+Note: This will take a while.</string>
+       </property>
+       <property name="text">
+        <string>&amp;Re-encode (slow, precise)</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonNoEncode">
+       <property name="toolTip">
+        <string>If checked, the concatenated video will use stream-copying and transport
+streams to concatenate instantly (similar to the &quot;Auto&quot; trimming mode).
+
+Note: This only works with specific formats in specific situations. Do not
+overwrite existing files in this mode unless you know what you're doing.</string>
+       </property>
+       <property name="text">
+        <string>&amp;Stream-copy (instant, imprecise)</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup</string>
+       </attribute>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QVideoList</class>
+   <extends>QListWidget</extends>
+   <header>widgets</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>videoList</tabstop>
+  <tabstop>checkOpen</tabstop>
+  <tabstop>checkExplore</tabstop>
+  <tabstop>checkDelete</tabstop>
+  <tabstop>output</tabstop>
+  <tabstop>browse</tabstop>
+  <tabstop>add</tabstop>
+  <tabstop>delete</tabstop>
+  <tabstop>up</tabstop>
+  <tabstop>down</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>catDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>429</x>
+     <y>454</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>catDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>429</x>
+     <y>454</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroup"/>
+ </buttongroups>
+</ui>
