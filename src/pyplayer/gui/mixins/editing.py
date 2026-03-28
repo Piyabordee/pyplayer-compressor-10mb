@@ -11,7 +11,7 @@ from traceback import format_exc
 
 from PyQt5 import QtCore, QtGui, QtWidgets as QtW
 
-from pyplayer.core.constants import TEMP_DIR
+from pyplayer.constants import TEMP_DIR
 
 
 logger = logging.getLogger(__name__)

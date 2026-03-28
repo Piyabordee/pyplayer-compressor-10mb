@@ -11,7 +11,8 @@ from traceback import format_exc
 from PyQt5 import QtCore, QtWidgets as QtW
 from PyQt5.QtCore import Qt
 
-from pyplayer.core.constants import TEMP_DIR, THUMBNAIL_DIR
+from pyplayer import constants
+from pyplayer.constants import TEMP_DIR, THUMBNAIL_DIR
 
 
 logger = logging.getLogger(__name__)

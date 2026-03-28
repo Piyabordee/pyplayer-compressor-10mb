@@ -9,6 +9,8 @@ from PyQt5 import QtCore, QtWidgets as QtW
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox
 
+from pyplayer import constants
+
 
 logger = logging.getLogger(__name__)
 

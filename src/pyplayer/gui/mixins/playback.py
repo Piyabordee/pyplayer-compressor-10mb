@@ -6,9 +6,22 @@ import os
 from time import time as get_time
 
 from PyQt5 import QtCore, QtGui, QtWidgets as QtW
-from vlc import State
 
-from pyplayer.core.constants import APP_RUNNING, IS_WINDOWS
+# Import State from vlc if available (requires VLC DLL setup)
+try:
+    from vlc import State
+except (ImportError, OSError):
+    # Create a stub State for testing/migration when VLC isn't available
+    class State:
+        Stopped = 0
+        Opening = 1
+        Buffering = 2
+        Playing = 3
+        Paused = 4
+        Ended = 5
+        Error = 6
+
+from pyplayer.constants import APP_RUNNING, IS_WINDOWS
 
 
 logger = logging.getLogger(__name__)
