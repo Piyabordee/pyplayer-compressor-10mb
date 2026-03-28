@@ -33,6 +33,12 @@ def _get_unique_path():
     """Lazy import to avoid circular dependency at module load."""
     from pyplayer.core import fileutils
     return fileutils.get_unique_path
+
+# Lazy import helper for qtstart.args (command-line arguments)
+def _get_args():
+    """Lazy import to access parsed command-line arguments."""
+    from pyplayer import app
+    return app.args
 HYPERLINK = f'<a href="{constants.REPOSITORY_URL}/releases/latest">latest release on GitHub here</a>.'
 
 # ---------------------
@@ -183,8 +189,8 @@ def download_update(self, latest_version: str, download_url: str, download_path:
 
         # run updater utility and exit current PyPlayer instance
         args = []
-        if self.video or qtstart.args.file: args.append(f'"{self.video or qtstart.args.file}"')
-        if qtstart.args.play_and_exit: args.append('"--play-and-exit"')
+        if self.video or _get_args().file: args.append(f'"{self.video or _get_args().file}"')
+        if _get_args().play_and_exit: args.append('"--play-and-exit"')
         cmd_args = f' {" ".join(args)}' if args else ''
         add_to_report = f'"{constants.VERSION.split()[1]} -> {latest_version}" "{active_updater_path}"'
 
@@ -241,7 +247,7 @@ def validate_update(self, update_report: str) -> None:
 
         if status != 'SUCCESS':
             logger.warning(f'(!) UPDATE FAILED: {status}')
-            return qthelpers.getPopup(title='Update failed',
+            return _get_qthelpers().getPopup(title='Update failed',
                                       icon=QMessageBox.Warning,
                                       text='The attempted update failed while unpacking.',
                                       textInformative='If needed, you can manually download the ' + HYPERLINK,
