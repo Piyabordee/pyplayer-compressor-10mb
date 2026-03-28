@@ -31,8 +31,8 @@ def _get_qthelpers():
 # Lazy import helper for util.get_unique_path
 def _get_unique_path():
     """Lazy import to avoid circular dependency at module load."""
-    from pyplayer.core import fileutils
-    return fileutils.get_unique_path
+    from pyplayer.core import file_ops
+    return file_ops.get_unique_path
 
 # Lazy import helper for qtstart.args (command-line arguments)
 def _get_args():
