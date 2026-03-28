@@ -14,7 +14,7 @@ import subprocess
 # ---------------------
 
 VERSION = 'pyplayer 0.6.0 beta'
-REPOSITORY_URL = 'https://github.com/thisismy-github/pyplayer'
+REPOSITORY_URL = 'https://github.com/Piyabordee/pyplayer-compressor-10mb'
 
 # ---------------------
 
