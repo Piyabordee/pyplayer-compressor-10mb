@@ -54,6 +54,9 @@ config.ini
 *.bak
 *.tmp
 
+# Obsidian
+.obsidian/
+
 # Claude Code
 .claude/
 memory/
