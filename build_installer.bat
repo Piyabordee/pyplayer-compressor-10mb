@@ -6,9 +6,15 @@ REM ============================================================
 
 SETLOCAL EnableDelayedExpansion
 
-SET "PROJECT_DIR=C:\Users\snowb4ll\Documents\pyplayer-master"
-SET "PYTHON_EXE=python"
-SET "INNO_COMPILER=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+REM Load configuration from .env file
+if not exist "%~dp0.env" (
+    echo ERROR: .env file not found
+    echo Copy .env.example to .env and fill in your local paths
+    pause
+    exit /b 1
+)
+
+FOR /F "usebackq eol=# tokens=1,* delims==" %%A IN ("%~dp0.env") DO SET "%%A=%%B"
 
 echo ============================================================
 echo PyPlayer Compressor - Build Script
@@ -44,7 +50,7 @@ cd /d "%PROJECT_DIR%"
 REM Build with PyInstaller
 echo.
 echo [4/5] Building PyPlayer executable...
-cd /d "%PROJECT_DIR%\executable"
+cd /d "%PROJECT_DIR%\packaging"
 %PYTHON_EXE% build.py
 if errorlevel 1 (
     echo ERROR: PyInstaller build failed
@@ -64,7 +70,7 @@ if not exist "%INNO_COMPILER%" (
 )
 
 REM Build installer
-"%INNO_COMPILER%" "%PROJECT_DIR%\executable\installer.iss"
+"%INNO_COMPILER%" "%PROJECT_DIR%\packaging\installer.iss"
 if errorlevel 1 (
     echo ERROR: Inno Setup compilation failed
     pause
@@ -76,10 +82,10 @@ echo ============================================================
 echo BUILD SUCCESSFUL!
 echo ============================================================
 echo Output location:
-echo   - PyInstaller build: %PROJECT_DIR%\executable\compiled\
-echo   - Installer: %PROJECT_DIR%\executable\installer_output\
+echo   - PyInstaller build: %PROJECT_DIR%\packaging\compiled\
+echo   - Installer: %PROJECT_DIR%\packaging\installer_output\
 echo.
 echo Setup file:
-dir /b "%PROJECT_DIR%\executable\installer_output\*.exe"
+dir /b "%PROJECT_DIR%\packaging\installer_output\*.exe"
 echo.
 pause

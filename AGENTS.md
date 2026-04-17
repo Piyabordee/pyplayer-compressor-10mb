@@ -28,37 +28,87 @@
 
 ## Repository Structure
 
+The codebase has been restructured from a flat layout into a proper Python package under `src/pyplayer/`. Original flat files are preserved in the repo root for fallback testing during the transition.
+
 ```
 pyplayer-master/
-├── main.pyw                    # Entry point (531KB - contains most GUI logic)
-├── config.py                   # Configuration loading/saving (ConfigParseBetter)
-├── constants.py                # Global constants, paths, FFmpeg verification
-├── compression.py              # Video compression module (bitrate calc, FFmpeg wrapper)
-├── util.py                     # Utility functions (FFmpeg wrappers, file ops)
-├── qthelpers.py                # Qt utility functions and helpers
-├── qtstart.py                  # Startup code, signal connections, tray icon
-├── widgets.py                  # Custom Qt widgets (216KB)
-├── update.py                   # Update checking and downloading
-├── requirements.txt            # Python dependencies
-├── README.md                   # User-facing documentation
-├── GitHub_Release.md           # GitHub release guide
+├── pyplayer.pyw              # Backward-compatible entry point
+├── pyproject.toml            # Package build config
+├── src/pyplayer/
+│   ├── __init__.py           # Package root
+│   ├── __main__.py           # python -m pyplayer entry
+│   ├── app.py                # QApplication startup
+│   ├── constants.py          # Global constants
+│   ├── config.py             # Configuration management
+│   ├── resource_helper.py    # Resource path helpers
+│   ├── update.py             # Update checking
+│   ├── updater_cli.py        # Standalone updater (extracts .zip)
+│   │
+│   ├── core/
+│   │   ├── config_parser.py  # Custom config parser
+│   │   ├── compression.py    # Video compression
+│   │   ├── edit.py           # Edit queue management
+│   │   ├── ffmpeg.py         # FFmpeg subprocess wrappers
+│   │   ├── file_ops.py       # File operations
+│   │   ├── media_utils.py    # Media utility functions
+│   │   └── probe.py          # FFprobe media analysis
+│   │
+│   ├── gui/
+│   │   ├── main_window.py    # MainWindow (mixin composition)
+│   │   ├── helpers.py        # Qt utility functions
+│   │   ├── progress.py       # Progress dialogs
+│   │   ├── signals.py        # Signal connections
+│   │   ├── shortcuts.py      # Keyboard shortcuts
+│   │   ├── tray.py           # System tray
+│   │   └── mixins/
+│   │       ├── playback.py   # Volume, tracks, rate, navigation
+│   │       ├── editing.py    # Trim, crop, edit queue
+│   │       ├── saving.py     # Save, export, compress
+│   │       ├── file_management.py  # Open, cycle, copy, rename
+│   │       ├── menus.py      # Context menus, mouse events
+│   │       ├── themes.py     # Theme loading/switching
+│   │       ├── events.py     # Qt event handlers
+│   │       ├── dialogs.py    # Dialogs, browse, updates
+│   │       └── ui_state.py   # Visibility, state, statusbar
+│   │
+│   ├── widgets/
+│   │   ├── player_backend.py # VLC/Qt player backends
+│   │   ├── player_widget.py  # QVideoPlayer
+│   │   ├── player_label.py   # QVideoPlayerLabel
+│   │   ├── video_slider.py   # QVideoSlider
+│   │   ├── video_list.py     # QVideoList
+│   │   ├── overlays.py       # Text overlays, color picker
+│   │   ├── inputs.py         # Key sequence edit, passthrough widgets
+│   │   ├── draggable.py      # Draggable window frame
+│   │   └── helpers.py        # Runtime aliases, ZOOM constants
+│   │
+│   └── ui/
+│       ├── window_pyplayer.py  # Main window UI
+│       ├── window_settings.py  # Settings UI
+│       ├── window_about.py     # About dialog UI
+│       ├── window_cat.py       # Category dialog UI
+│       ├── window_text.py      # Text dialog UI
+│       └── window_timestamp.py # Timestamp dialog UI
 │
-├── bin/                        # UI components and utilities
-│   ├── window_*.py            # Generated from Qt Designer .ui files
-│   ├── configparsebetter.py   # Custom config parser
-│   └── updater.py             # Update utility script
+├── packaging/                 # Build configs (PyInstaller, Inno Setup)
+├── ui_sources/                # Qt Designer .ui source files
+├── assets/                    # Design files (.pdn logos)
+├── scripts/                   # Utility scripts (convert_ui.py)
+├── tests/                     # Test suite
+├── themes/                    # Qt theme files (unchanged)
+├── bin/                       # Original files (kept during transition)
 │
-├── executable/                 # Build and distribution files
-│   ├── build.py               # PyInstaller build script
-│   ├── hook.py                # PyInstaller hooks
-│   └── include/               # VLC and FFmpeg binaries
-│
-├── themes/                     # Qt Stylesheet theme files
-│   ├── midnight.txt
-│   ├── blueberry_breeze.txt
-│   └── ...
-│
-└── CLAUDE.md / AGENTS.md       # AI agent guidance (you are here)
+├── main.pyw                   # OLD entry point (kept for fallback)
+├── widgets.py                 # OLD widgets (kept for fallback)
+├── util.py                    # OLD utilities (kept for fallback)
+├── qthelpers.py               # OLD Qt helpers (kept for fallback)
+├── qtstart.py                 # OLD startup (kept for fallback)
+├── constants.py               # OLD constants (kept for fallback)
+├── config.py                  # OLD config (kept for fallback)
+├── compression.py             # OLD compression (kept for fallback)
+├── resource_helper.py         # OLD resource helper (kept for fallback)
+├── update.py                  # OLD update (kept for fallback)
+└── executable/                # OLD build configs (kept for fallback)
 ```
 
 ---
@@ -68,42 +118,70 @@ pyplayer-master/
 ### Application Flow
 
 ```
-main.pyw (entry point)
+pyplayer.pyw or python -m pyplayer (entry points)
     │
-    ├─→ qtstart.py
-    │   ├─→ Argument parsing
-    │   ├─→ Logging setup
-    │   ├─→ System tray creation
-    │   └─→ Signal/widget connections
-    │
-    ├─→ config.py
-    │   └─→ Load/Save user configuration
-    │
-    ├─→ constants.py
-    │   ├─→ Platform detection
-    │   ├─→ Path constants
-    │   └─→ FFmpeg/FFprobe verification
-    │
-    ├─→ compression.py
-    │   ├─→ Bitrate calculation (target ~10MB)
-    │   └─→ FFmpeg compression with progress callback
-    │
-    └─→ widgets.py
-        ├─→ QVideoPlayer (VLC wrapper)
-        ├─→ QVideoSlider (custom progress bar)
-        └─→ Custom Qt widgets
+    └─→ src/pyplayer/__main__.py
+        │
+        └─→ src/pyplayer/app.py (QApplication startup)
+            │
+            ├─→ constants.py          Platform detection, paths, FFmpeg verification
+            ├─→ config.py             Load/Save user configuration
+            ├─→ resource_helper.py    Resource path resolution (dev vs compiled)
+            │
+            └─→ gui/main_window.py    MainWindow = mixin composition
+                │
+                ├─→ gui/signals.py     Signal/slot connections
+                ├─→ gui/shortcuts.py   Keyboard shortcuts
+                ├─→ gui/tray.py        System tray icon
+                │
+                ├─→ gui/mixins/
+                │   ├─→ playback.py       Volume, tracks, rate, navigation
+                │   ├─→ editing.py        Trim, crop, edit queue
+                │   ├─→ saving.py         Save, export, compress
+                │   ├─→ file_management.py Open, cycle, copy, rename
+                │   ├─→ menus.py          Context menus, mouse events
+                │   ├─→ themes.py         Theme loading/switching
+                │   ├─→ events.py         Qt event handlers
+                │   ├─→ dialogs.py        Dialogs, browse, updates
+                │   └─→ ui_state.py       Visibility, state, statusbar
+                │
+                ├─→ widgets/
+                │   ├─→ player_backend.py VLC backend integration
+                │   ├─→ player_widget.py  QVideoPlayer
+                │   ├─→ video_slider.py   QVideoSlider (seek bar)
+                │   └─→ ...
+                │
+                └─→ core/
+                    ├─→ ffmpeg.py         FFmpeg subprocess wrappers
+                    ├─→ compression.py    Video compression (~10MB)
+                    ├─→ edit.py           Edit queue management
+                    ├─→ probe.py          FFprobe media analysis
+                    └─→ ...
 ```
 
 ### Key Classes and Components
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| `Ui_MainWindow` | `bin/window_pyplayer.py` | Main window UI structure |
-| `QVideoPlayer` | `widgets.py` | VLC media player widget wrapper |
-| `QVideoSlider` | `widgets.py` | Custom seek bar with hover preview |
-| `ConfigParseBetterQt` | `bin/configparsebetter.py` | Configuration file management |
-| `compress_video()` | `compression.py` | Video compression with bitrate calculation |
-| `getPopup()` | `qthelpers.py` | Generic dialog creation |
+| `MainWindow` | `gui/main_window.py` | Main window (mixin composition) |
+| `PlaybackMixin` | `gui/mixins/playback.py` | Volume, tracks, rate, navigation |
+| `EditingMixin` | `gui/mixins/editing.py` | Trim, crop, edit queue |
+| `SavingMixin` | `gui/mixins/saving.py` | Save, export, compress |
+| `FileManagementMixin` | `gui/mixins/file_management.py` | Open, cycle, copy, rename |
+| `MenusMixin` | `gui/mixins/menus.py` | Context menus, mouse events |
+| `ThemesMixin` | `gui/mixins/themes.py` | Theme loading/switching |
+| `EventsMixin` | `gui/mixins/events.py` | Qt event handlers |
+| `DialogsMixin` | `gui/mixins/dialogs.py` | Dialogs, browse, updates |
+| `UIStateMixin` | `gui/mixins/ui_state.py` | Visibility, state, statusbar |
+| `QVideoPlayer` | `widgets/player_widget.py` | VLC media player widget wrapper |
+| `QVideoSlider` | `widgets/video_slider.py` | Custom seek bar with hover preview |
+| `QVideoPlayerLabel` | `widgets/player_label.py` | VLC label-based player backend |
+| `Ui_MainWindow` | `ui/window_pyplayer.py` | Main window UI structure |
+| `ConfigParseBetterQt` | `core/config_parser.py` | Configuration file management |
+| `compress_video()` | `core/compression.py` | Video compression with bitrate calculation |
+| `getPopup()` | `gui/helpers.py` | Generic dialog creation |
+| `run_ffmpeg()` | `core/ffmpeg.py` | FFmpeg subprocess wrapper |
+| `probe_media()` | `core/probe.py` | FFprobe media analysis |
 
 ---
 
@@ -169,9 +247,9 @@ music-tag>=0.4.3       # Audio metadata
 ### Adding a New Feature
 
 1. **UI Components:**
-   - Edit `.ui` files in `bin/` with Qt Designer
-   - Run `convert_ui_to_py.py` to regenerate Python files
-   - Connect signals in `qtstart.py:connect_widget_signals()`
+   - Edit `.ui` files in `ui_sources/` with Qt Designer
+   - Run `scripts/convert_ui.py` to regenerate Python files into `src/pyplayer/ui/`
+   - Connect signals in `gui/signals.py`
 
 2. **Configuration Options:**
    - Add to `config.py:loadConfig()` for reading
@@ -179,20 +257,24 @@ music-tag>=0.4.3       # Audio metadata
    - Use `cfg.load()` and `cfg.save()` helpers
 
 3. **Keyboard Shortcuts:**
-   - Add to `qtstart.py:connect_shortcuts()` dictionary
+   - Add to `gui/shortcuts.py` dictionary
    - Corresponding widget in `dialog_settings.formKeys`
+
+4. **MainWindow Mixins:**
+   - Add new behavior to the appropriate mixin in `gui/mixins/`
+   - Import the mixin class in `gui/main_window.py`
 
 ### Building Executable
 
 ```bash
-# From executable/ directory
+# From packaging/ directory
 python build.py
 ```
 
 Uses PyInstaller with:
-- `hook.py` for hidden imports
-- `exclude.txt` for exclusion list
+- Spec files in `packaging/` (pyplayer.spec, updater.spec)
 - One-file mode
+- Entry point: `src/pyplayer/__main__.py`
 
 ### Debugging
 
@@ -276,6 +358,14 @@ Uses PyInstaller with:
    - Text color set to black for dialogs and progress indicators for better readability
    - Auto-compress checkbox synchronized with loaded settings
    - Improved error handling for theme directory creation
+
+7. **Repository Restructure** (Phase 7)
+   - Flat layout reorganized into `src/pyplayer/` package with subpackages: `core/`, `gui/`, `widgets/`, `ui/`
+   - `main.pyw` (531KB) split into ~49 focused modules under 800 lines each
+   - MainWindow decomposed into 9 mixin classes for maintainability
+   - Build configs consolidated into `packaging/` directory
+   - Backward-compatible entry points: `pyplayer.pyw` and `python -m pyplayer`
+   - Original flat files preserved in repo root for fallback testing
 
 **Recent Commits:**
 ```
@@ -365,11 +455,12 @@ When working on this codebase:
 2. **Preserve existing behavior** - The fork's value is in its workflow improvements
 3. **Test FFmpeg operations** - Editing features depend on external binaries
 4. **Respect the original author's work** - This is a fork; maintain compatibility
-5. **Use existing helpers** - `qthelpers.py` and `util.py` contain useful utilities
+5. **Use existing helpers** - `gui/helpers.py` and `core/file_ops.py` contain useful utilities
 6. **Follow Qt patterns** - Signal/slot, proper widget lifecycle, etc.
 7. **Handle platform differences** - Windows is primary; Linux/macOS secondary
+8. **Package imports** - New code uses `from pyplayer.core import ...` style imports
 
 ---
 
-*Last Updated: 2026-03-28 (Updated with 10 new commits, total 41 recent commits)*
+*Last Updated: 2026-03-28 (Repo restructure into src/pyplayer/ package — Phase 7 complete)*
 *Generated for: PyPlayer Compressor 0.6.0 beta*

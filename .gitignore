@@ -50,8 +50,12 @@ desktop.ini
 
 # Project specific
 settings.json
+config.ini
 *.bak
 *.tmp
+
+# Obsidian
+.obsidian/
 
 # Claude Code
 .claude/
@@ -82,6 +86,16 @@ executable/installer_output/
 *.exe
 !updater.exe
 
+# ============================================================
+# Packaging (restructured from executable/)
+# ============================================================
+packaging/build/
+packaging/compiling/
+packaging/installer_output/
+packaging/__pycache__/
+packaging/compiled/
+packaging/dist/
+
 # Inno Setup temp files
 executable/*.~iss
 
@@ -110,3 +124,4 @@ bin/*/probed/
 
 # If you don't want to track the helper module:
 # resource_helper.py
+.env
