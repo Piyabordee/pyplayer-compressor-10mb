@@ -13,12 +13,17 @@ from PyQt5 import QtWidgets as QtW
 import vlc
 from vlc import State
 
-import qtstart
+def _get_args():
+    """Lazy import to avoid circular dependency with _helpers.app.py."""
+    from pyplayer import app as _app_module
+    return _app_module.args
 
 from pyplayer import constants
 from pyplayer.constants import SetProgressContext
 from pyplayer.core.ffmpeg import ffmpeg
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer.widgets import helpers as _helpers
+# NOTE: Access _helpers.gui, _helpers.settings, etc. at runtime (not at import time)
+# because set_aliases() updates the module globals after MainWindow is created.
 
 
 logger = logging.getLogger('widgets.py')
@@ -57,7 +62,7 @@ class PyPlayerBackend:
 
     def enable(self) -> bool:
         ''' Called upon enabling the backend. When starting PyPlayer, this is
-            called immediately after `gui.setup()` and loading the config, but
+            called immediately after `_helpers.gui.setup()` and loading the config, but
             before showing the window. '''
         self.enabled = True
         self.open_cleanup_queued = False
@@ -79,7 +84,7 @@ class PyPlayerBackend:
     # ---
 
     def on_show(self, event: QtGui.QShowEvent):
-        ''' Called in `gui.showEvent()`, before the window's
+        ''' Called in `_helpers.gui.showEvent()`, before the window's
             state has been fully restored/validated. '''
         self.show()
 
@@ -88,15 +93,15 @@ class PyPlayerBackend:
         pass
 
     def on_fullscreen(self, fullscreen: bool):
-        ''' Called at the end of `gui.set_fullscreen()`, just before calling
-            `gui.showFullScreen()`/`gui.showMaximized()`/`gui.showNormal()`. '''
+        ''' Called at the end of `_helpers.gui.set_fullscreen()`, just before calling
+            `_helpers.gui.showFullScreen()`/`_helpers.gui.showMaximized()`/`_helpers.gui.showNormal()`. '''
         pass
 
     def on_parse(self, file: str, base_mime: str, mime: str, extension: str):
-        ''' Called at the end of `gui.parse_media_file()`. All probe-related
+        ''' Called at the end of `_helpers.gui.parse_media_file()`. All probe-related
             properties will be up-to-date when this event fires. Rarely, `mime`
             may mutate - `base_mime` is what `file` was initially parsed as.
-            NOTE: This event MUST emit `gui._open_cleanup_signal` in some way.
+            NOTE: This event MUST emit `_helpers.gui._open_cleanup_signal` in some way.
             If you do not emit it directly, set `self.open_cleanup_queued` to
             True until the cleanup signal is emitted so PyPlayer understands
             that it's waiting for cleanup.
@@ -104,21 +109,21 @@ class PyPlayerBackend:
             will begin updating immediately afterwards. If you wish to override
             probe properties, you must decide between waiting for the player
             to finish parsing or using `self.on_open_cleanup()` instead. '''
-        gui._open_cleanup_signal.emit()
+        _helpers.gui._open_cleanup_signal.emit()
 
     def on_open_cleanup(self):
-        ''' Called at the end of `gui._open_cleanup_slot()`. All opening-related
-            properties (aside from `gui.open_in_progress`) will be up-to-date
+        ''' Called at the end of `_helpers.gui._open_cleanup_slot()`. All opening-related
+            properties (aside from `_helpers.gui.open_in_progress`) will be up-to-date
             when this even fires. '''
         pass
 
     def on_restart(self):
-        ''' Called in `gui.restart()`, immediately after confirming the restart
-            is valid. `gui.restarted` will be False. After this event, the UI
+        ''' Called in `_helpers.gui.restart()`, immediately after confirming the restart
+            is valid. `_helpers.gui.restarted` will be False. After this event, the UI
             be updated and the player will be force-paused. This event should
             do any extraneous cleanup that must be urgently completed to ensure
             finished media is immediately/seamlessly ready to play again. '''
-        gui.update_progress_signal.emit(gui.frame_count)    # ensure UI snaps to final frame
+        _helpers.gui.update_progress_signal.emit(_helpers.gui.frame_count)    # ensure UI snaps to final frame
 
     # ---
 
@@ -138,10 +143,10 @@ class PyPlayerBackend:
         raise NotImplementedError()
 
     def loop(self):
-        ''' Loops the player back to `gui.minimum` after the media *completes*.
+        ''' Loops the player back to `_helpers.gui.minimum` after the media *completes*.
             This is not called when there is an ending marker. '''
-        self.set_and_update_progress(gui.minimum, SetProgressContext.RESET_TO_MIN)
-        return gui.force_pause(False)
+        self.set_and_update_progress(_helpers.gui.minimum, SetProgressContext.RESET_TO_MIN)
+        return _helpers.gui.force_pause(False)
 
     def snapshot(self, path: str, frame: int, width: int, height: int):
         ''' Saves the desired `frame` to `path`, resized to `width`x`height`.
@@ -149,7 +154,7 @@ class PyPlayerBackend:
             NOTE: You should probably override this. FFmpeg sucks. '''
         w = width or -1                                     # -1 uses aspect ratio in ffmpeg
         h = height or -1                                    # using `-ss` is faster but even less accurate
-        ffmpeg(f'-i "{gui.video}" -frames:v 1 -vf "select=\'eq(n\\,{frame})\', scale={w}:{h}" "{path}"')
+        ffmpeg(f'-i "{_helpers.gui.video}" -frames:v 1 -vf "select=\'eq(n\\,{frame})\', scale={w}:{h}" "{path}"')
 
     # ---
 
@@ -202,9 +207,9 @@ class PyPlayerBackend:
             NOTE: Don't forget to update GIF progress.
             NOTE: This method should update the player's non-GIF progress
             ASAP, so the player feels "snappier" on the user's end. '''
-        self.set_position(frame / gui.frame_count)
-        gui.update_progress(frame)
-        gui.gifPlayer.gif.jumpToFrame(frame)
+        self.set_position(frame / _helpers.gui.frame_count)
+        _helpers.gui.update_progress(frame)
+        _helpers.gui.gifPlayer.gif.jumpToFrame(frame)
 
     # ---
 
@@ -212,7 +217,7 @@ class PyPlayerBackend:
         return State.NothingSpecial
 
     def can_restart(self) -> bool:
-        ''' Called at the start of `gui.restart()`.
+        ''' Called at the start of `_helpers.gui.restart()`.
             Returns False if a restart should be skipped. '''
         return True
 
@@ -308,8 +313,8 @@ class PyPlayerBackend:
     def show_text(self, text: str, timeout: int = 350, position: int = None):
         ''' Displays marquee `text` (overlaying the player),
             overriding the default `position` if desired. '''
-        if not settings.groupText.isChecked(): return       # marquees are completely disabled -> return
-        gui.statusbar.showMessage(text.replace('%%', '%'), max(timeout, 1000))
+        if not _helpers.settings.groupText.isChecked(): return       # marquees are completely disabled -> return
+        _helpers.gui.statusbar.showMessage(text.replace('%%', '%'), max(timeout, 1000))
 
     def set_text_position(self, button: QtW.QRadioButton):
         ''' Sets marquee text's position to one of 9 pre-defined values
@@ -402,13 +407,14 @@ class PlayerVLC(PyPlayerBackend):
         super().enable()
 
         # setup VLC instance
-        logger.debug(f'VLC arguments: {qtstart.args.vlc}')
-        self._instance = vlc.Instance(qtstart.args.vlc)     # VLC arguments can be passed through the --vlc argument
+        _args = _get_args()
+        logger.debug(f'VLC arguments: {_args.vlc}')
+        self._instance = vlc.Instance(_args.vlc)     # VLC arguments can be passed through the --vlc argument
         player = self._player = self._instance.media_player_new()
         event_manager = self._event_manager = player.event_manager()
 
         # NOTE: cannot use .emit as a callback
-        event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, lambda event: gui.restart_signal.emit())
+        event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, lambda event: _helpers.gui.restart_signal.emit())
         event_manager.event_attach(vlc.EventType.MediaPlayerOpening, lambda event: setattr(self, 'opening', True))
         event_manager.event_attach(vlc.EventType.MediaPlayerPlaying, self._on_play)
 
@@ -452,9 +458,9 @@ class PlayerVLC(PyPlayerBackend):
         player.video_set_marquee_int(vlc.VideoMarqueeOption.Enable, 1)
 
         # manually refresh text-related settings
-        self.set_text_height(settings.spinTextHeight.value())
-        self.set_text_x(settings.spinTextX.value())
-        self.set_text_y(settings.spinTextY.value())
+        self.set_text_height(_helpers.settings.spinTextHeight.value())
+        self.set_text_x(_helpers.settings.spinTextX.value())
+        self.set_text_y(_helpers.settings.spinTextY.value())
 
         # start slider-related threads (these are safe to do before showing window)
         self.swap_slider_styles_queued = False
@@ -465,7 +471,7 @@ class PlayerVLC(PyPlayerBackend):
         return True
 
 
-    def disable(self, wait: bool = True):                   # TODO do we need `gui.frame_override` in here for smooth transitions?
+    def disable(self, wait: bool = True):                   # TODO do we need `_helpers.gui.frame_override` in here for smooth transitions?
         super().disable()
         self.text_fade_thread_open = False
         self.open_cleanup_queued = False
@@ -494,23 +500,23 @@ class PlayerVLC(PyPlayerBackend):
             # ...does it) -> when opening a new file, immediately set all tracks to track 1
             if self.last_file != self.file_being_opened:
                 self.last_file = self.file_being_opened
-                gui.last_video_track = 1
-                gui.last_audio_track = 1
-                gui.last_subtitle_track = 1 if settings.checkAutoEnableSubtitles.isChecked() else -1
-                gui.last_audio_delay = 0
-                gui.last_subtitle_delay = 0
-            gui.tracks_were_changed = True                  # we can ignore this since the tracks are always set
-            gui.restore_tracks()
+                _helpers.gui.last_video_track = 1
+                _helpers.gui.last_audio_track = 1
+                _helpers.gui.last_subtitle_track = 1 if _helpers.settings.checkAutoEnableSubtitles.isChecked() else -1
+                _helpers.gui.last_audio_delay = 0
+                _helpers.gui.last_subtitle_delay = 0
+            _helpers.gui.tracks_were_changed = True                  # we can ignore this since the tracks are always set
+            _helpers.gui.restore_tracks()
 
 
     def on_parse(self, file: str, base_mime: str, mime: str, extension: str):
         if base_mime == 'image':
-            gui._open_cleanup_signal.emit()                 # manually emit _open_cleanup_signal for images/gifs (slider thread will be idle)
+            _helpers.gui._open_cleanup_signal.emit()                 # manually emit _open_cleanup_signal for images/gifs (slider thread will be idle)
             self.is_pitch_sensitive_audio = False
             self.is_bad_with_vlc = False
         else:
             self.open_cleanup_queued = True                 # `open_cleanup_queued` + `open_in_progress` and `frame_override` work...
-            gui.frame_override = 0                          # ...together to halt `update_slider_thread()` and trigger cleanup safely
+            _helpers.gui.frame_override = 0                          # ...together to halt `update_slider_thread()` and trigger cleanup safely
 
             # TODO: we should really be tracking the codec instead of the container here
             # TODO: can this be fixed with a different demuxer or something? (what we COULD have done to fix pitch-shifting)
@@ -523,7 +529,7 @@ class PlayerVLC(PyPlayerBackend):
 
             # update marquee size and offset relative to video's dimensions
             if mime == 'video':
-                height = gui.vheight
+                height = _helpers.gui.vheight
                 parent = self.parent
                 set_marquee_int = self._player.video_set_marquee_int
                 set_marquee_int(vlc.VideoMarqueeOption.Size, int(height * parent._text_height_percent))
@@ -535,14 +541,14 @@ class PlayerVLC(PyPlayerBackend):
         # warn users that the current media will not scrub/navigate very well
         # TODO: what else needs to be here (and set as not `self.is_pitch_sensitive_audio`)?
         if self.is_bad_with_vlc:
-            gui.statusbar.showMessage(f'Note: Files of this mime type/encoding ({gui.mime_type}/{gui.extension}) may be laggy or unresponsive while scrubbing/navigating on some systems (libVLC issue).')
+            _helpers.gui.statusbar.showMessage(f'Note: Files of this mime type/encoding ({_helpers.gui.mime_type}/{_helpers.gui.extension}) may be laggy or unresponsive while scrubbing/navigating on some systems (libVLC issue).')
 
 
     def on_restart(self):
-        self.play(gui.video)
-        frame = gui.frame_count
+        self.play(_helpers.gui.video)
+        frame = _helpers.gui.frame_count
         self.set_position((frame - 2) / frame)              # reset position (-2 frames to ensure visual update for VLC)
-        gui.update_progress_signal.emit(frame)              # ensure UI snaps to final frame
+        _helpers.gui.update_progress_signal.emit(frame)              # ensure UI snaps to final frame
         while self.get_state() == State.Ended:              # wait for VLC to update the player's state
             time.sleep(0.005)
 
@@ -565,37 +571,37 @@ class PlayerVLC(PyPlayerBackend):
             return True
         except:
             logger.warning(f'VLC failed to play file {file}: {format_exc()}')
-            if not _error and file != gui.video:            # `_error` ensures we only attempt to play previous video once
-                if not gui.video: self._player.stop()       # no previous video to play, so just stop playing
-                else: self.play(gui.video, _error=True)     # attempt to play previous working video
+            if not _error and file != _helpers.gui.video:            # `_error` ensures we only attempt to play previous video once
+                if not _helpers.gui.video: self._player.stop()       # no previous video to play, so just stop playing
+                else: self.play(_helpers.gui.video, _error=True)     # attempt to play previous working video
             return False
 
 
     def loop(self):
-        self.play(gui.video)
+        self.play(_helpers.gui.video)
         # TODO just in case doing `set_and_update_progress` causes hitches or delays, we're...
         # ...doing an if-statement instead to ensure normal loops are slightly more seamless
         #set_and_update_progress(self.minimum)              # <- DOES this cause hitches?
-        if gui.buttonTrimStart.isChecked():
-            return gui.update_progress(0)
-        return self.set_and_update_progress(gui.minimum, SetProgressContext.RESET_TO_MIN)
+        if _helpers.gui.buttonTrimStart.isChecked():
+            return _helpers.gui.update_progress(0)
+        return self.set_and_update_progress(_helpers.gui.minimum, SetProgressContext.RESET_TO_MIN)
 
 
     def can_restart(self) -> bool:
         # HACK: sometimes VLC will double-restart -> replay/restore position ASAP
-        if gui.restarted:
+        if _helpers.gui.restarted:
             logging.info('Double-restart detected. Ignoring...')
-            gui.restarted = False                           # set this so we don't get trapped in an infinite restart-loop
-            return gui.restore(gui.sliderProgress.value())
+            _helpers.gui.restarted = False                           # set this so we don't get trapped in an infinite restart-loop
+            return _helpers.gui.restore(_helpers.gui.sliderProgress.value())
 
         # reset frame_override in case it's set
-        gui.frame_override = -1
+        _helpers.gui.frame_override = -1
 
         # HACK: skip this restart if needed and restore actual progress
-        if gui.ignore_imminent_restart:
-            gui.ignore_imminent_restart = False
-            gui.restarted = True
-            return gui.restore(gui.sliderProgress.value())
+        if _helpers.gui.ignore_imminent_restart:
+            _helpers.gui.ignore_imminent_restart = False
+            _helpers.gui.restarted = True
+            return _helpers.gui.restore(_helpers.gui.sliderProgress.value())
 
         # we're good to go. continue with restart
         return True
@@ -613,7 +619,7 @@ class PlayerVLC(PyPlayerBackend):
 
     def set_playback_rate(self, rate: float):
         self._player.set_playback_rate(rate)
-        if rate == 1.0 or gui.playback_rate == 1.0:         # TODO: for now, lets just force the VLC-progress for non-standard speeds
+        if rate == 1.0 or _helpers.gui.playback_rate == 1.0:         # TODO: for now, lets just force the VLC-progress for non-standard speeds
             self.reset_progress_offset = True
             self.swap_slider_styles_queued = True
 
@@ -625,14 +631,14 @@ class PlayerVLC(PyPlayerBackend):
             VLC buffering. `offset` is ignored if `self.is_paused` is True. '''
 
         # don't touch progress if we're currently opening a file
-        if gui.open_in_progress:
+        if _helpers.gui.open_in_progress:
             return
 
         offset = self.context_offsets.get(context, None)
         if offset is None:
             return super().set_and_update_progress(frame, context)
 
-        is_paused = gui.is_paused
+        is_paused = _helpers.gui.is_paused
         is_pitch_sensitive_audio = self.is_pitch_sensitive_audio
 
         # HACK: "replay" audio file to correct VLC's pitch-shifting bug
@@ -642,19 +648,19 @@ class PlayerVLC(PyPlayerBackend):
             self._player.set_media(self._media)
             self._player.play()
 
-        #self.set_player_time(round(frame * (1000 / gui.frame_rate)))
-        self.set_position(frame / gui.frame_count)
-        gui.update_progress(frame)                          # necessary while paused and for a snappier visual update
-        gui.gifPlayer.gif.jumpToFrame(frame)
+        #self.set_player_time(round(frame * (1000 / _helpers.gui.frame_rate)))
+        self.set_position(frame / _helpers.gui.frame_count)
+        _helpers.gui.update_progress(frame)                          # necessary while paused and for a snappier visual update
+        _helpers.gui.gifPlayer.gif.jumpToFrame(frame)
 
         # NOTE: setting `frame_override` here on videos can cause high-precision progress...
         # ...to desync by a few frames, but prevents extremely rare timing issues that...
         # ...stop the slider from updating to its new position. is this trade-off worth it?
         # NOTE: `frame_override` sets `add_to_progress_offset` to 0.1 if it's 0
         #       -> add 0.001 to `offset` to ensure it doesn't get ignored
-        if settings.checkHighPrecisionProgress.isChecked() and not is_pitch_sensitive_audio:
+        if _helpers.settings.checkHighPrecisionProgress.isChecked() and not is_pitch_sensitive_audio:
             self.add_to_progress_offset = -0.075 if is_paused else offset + 0.001
-        gui.frame_override = frame                          # ^ set offset BEHIND current time while paused. i don't understand why, but it helps
+        _helpers.gui.frame_override = frame                          # ^ set offset BEHIND current time while paused. i don't understand why, but it helps
 
 
     def _get_tracks(self, get_description, raw: bool = False) -> tuple[int, str]:
@@ -682,25 +688,25 @@ class PlayerVLC(PyPlayerBackend):
 
     def add_audio_track(self, url: str, enable: bool = False) -> bool:
         if self._player.add_slave(1, url, enable) == 0:     # slaves can be subtitles (0) or audio (1)
-            gui.log_on_statusbar_signal.emit(f'Audio file {url} added and enabled.')
-            if settings.checkTextOnSubtitleAdded.isChecked():
+            _helpers.gui.log_on_statusbar_signal.emit(f'Audio file {url} added and enabled.')
+            if _helpers.settings.checkTextOnSubtitleAdded.isChecked():
                 self.show_text('Audio file added and enabled')
             return True
         else:                                               # returns 0 on success
-            gui.log_on_statusbar_signal.emit(f'Failed to add audio file {url} (VLC does not report specific errors for this).')
-            if settings.checkTextOnSubtitleAdded.isChecked():
+            _helpers.gui.log_on_statusbar_signal.emit(f'Failed to add audio file {url} (VLC does not report specific errors for this).')
+            if _helpers.settings.checkTextOnSubtitleAdded.isChecked():
                 self.show_text('Failed to add audio file')
 
 
     def add_subtitle_track(self, url: str, enable: bool = False) -> bool:
         if self._player.add_slave(0, url, enable) == 0:     # slaves can be subtitles (0) or audio (1)
-            gui.log_on_statusbar_signal.emit(f'Subtitle file {url} added and enabled.')
-            if settings.checkTextOnSubtitleAdded.isChecked():
+            _helpers.gui.log_on_statusbar_signal.emit(f'Subtitle file {url} added and enabled.')
+            if _helpers.settings.checkTextOnSubtitleAdded.isChecked():
                 self.show_text('Subtitle file added and enabled')
             return True
         else:                                               # returns 0 on success
-            gui.log_on_statusbar_signal.emit(f'Failed to add subtitle file {url} (VLC does not report specific errors for this).')
-            if settings.checkTextOnSubtitleAdded.isChecked():
+            _helpers.gui.log_on_statusbar_signal.emit(f'Failed to add subtitle file {url} (VLC does not report specific errors for this).')
+            if _helpers.settings.checkTextOnSubtitleAdded.isChecked():
                 self.show_text('Failed to add subtitle file')
 
 
@@ -715,19 +721,19 @@ class PlayerVLC(PyPlayerBackend):
 
     def set_text_height(self, percent: int):
         self.parent._text_height_percent = percent / 100
-        new_size = int(gui.vheight * self.parent._text_height_percent)
+        new_size = int(_helpers.gui.vheight * self.parent._text_height_percent)
         self._player.video_set_marquee_int(vlc.VideoMarqueeOption.Size, new_size)
 
 
     def set_text_x(self, percent: float):
         self.parent._text_x_percent = percent / 100         # ↓ offset is relative to media's height for both X and Y
-        new_x = int(gui.vheight * self.parent._text_x_percent)
+        new_x = int(_helpers.gui.vheight * self.parent._text_x_percent)
         self._player.video_set_marquee_int(vlc.VideoMarqueeOption.X, new_x)
 
 
     def set_text_y(self, percent: float):
         self.parent._text_y_percent = percent / 100         # ↓ offset is relative to media's height for both X and Y
-        new_y = int(gui.vheight * self.parent._text_y_percent)
+        new_y = int(_helpers.gui.vheight * self.parent._text_y_percent)
         self._player.video_set_marquee_int(vlc.VideoMarqueeOption.Y, new_y)
 
 
@@ -743,16 +749,16 @@ class PlayerVLC(PyPlayerBackend):
             NOTE: VLC supports %-strings: https://wiki.videolan.org/Documentation:Format_String/
                   Escape isolated % characters with %%. Use VideoMarqueeOption.Refresh to auto-update text on
                   an interval. See the bottom of vlc.py for an example implementation of an on-screen clock. '''
-        if not settings.groupText.isChecked(): return       # marquees are completely disabled -> return
+        if not _helpers.settings.groupText.isChecked(): return       # marquees are completely disabled -> return
 
         try:
             # calculate when the text should start and complete its fading animation
-            delay = max(timeout / 1000, settings.spinTextFadeDelay.value())
+            delay = max(timeout / 1000, _helpers.settings.spinTextFadeDelay.value())
             self.text_fade_start_time = time.time() + delay
             if timeout == 0:                                # `timeout` of 0 -> leave the text up indefinitely
                 self.text_fade_end_time = self.text_fade_start_time
             else:
-                fade_duration = settings.spinTextFadeDuration.value()
+                fade_duration = _helpers.settings.spinTextFadeDuration.value()
                 if fade_duration < 0.1:                     # any lower than 0.1 seconds -> disappear instantly
                     fade_duration = -0.1
                 self.text_fade_end_time = self.text_fade_start_time + fade_duration
@@ -767,7 +773,7 @@ class PlayerVLC(PyPlayerBackend):
             unique_settings = new_settings != self.last_text_settings
 
             # actually set text and position if they're unique
-            if (timeout == 0 and not unique_settings) or not gui.video:
+            if (timeout == 0 and not unique_settings) or not _helpers.gui.video:
                 return                                      # avoid repetitive + pointless calls
             if unique_settings:
                 self._player.video_set_marquee_int(vlc.VideoMarqueeOption.Position, position)
@@ -846,7 +852,7 @@ class PlayerVLC(PyPlayerBackend):
         vlc_desync = 0.0
 
         # re-define global aliases -> having them as locals is even faster
-        _gui = gui
+        _gui = _helpers.gui
         get_ui_frame = _gui.sliderProgress.value
         is_playing = self.is_playing
         _sleep = time.sleep
@@ -938,7 +944,7 @@ class PlayerVLC(PyPlayerBackend):
         logging.debug('Slider-updating thread started.')
 
         # re-define global aliases -> having them as locals is even faster
-        _gui = gui
+        _gui = _helpers.gui
         get_ui_frame = _gui.sliderProgress.value
         repaint_slider = _gui.sliderProgress.update
         is_playing = self.is_playing
@@ -1131,8 +1137,8 @@ class PlayerQt(PyPlayerBackend):
 
         self.get_playback_rate = player.playbackRate
         self.set_playback_rate = player.setPlaybackRate
-        self.get_position = lambda: (player.position() / 1000) / gui.duration
-        self.set_position = lambda pos: player.setPosition(int((pos * gui.duration) * 1000))
+        self.get_position = lambda: (player.position() / 1000) / _helpers.gui.duration
+        self.set_position = lambda pos: player.setPosition(int((pos * _helpers.gui.duration) * 1000))
         self.get_volume = player.volume
         self.set_volume = player.setVolume
         self.get_mute = player.isMuted
@@ -1172,10 +1178,10 @@ class PlayerQt(PyPlayerBackend):
         video_widget.leaveEvent = self.parent.leaveEvent
 
         # start ui-updating timer
-        if gui.mime_type == 'image':
-            interval = 50 if gui.isFullScreen() else 200        # update at 5fps for images (or 20fps if we're fullscreen)
+        if _helpers.gui.mime_type == 'image':
+            interval = 50 if _helpers.gui.isFullScreen() else 200        # update at 5fps for images (or 20fps if we're fullscreen)
         else:
-            interval = max(17, min(50, gui.delay * 1000))       # clamp interval to 17-50ms (~59-20fps)
+            interval = max(17, min(50, _helpers.gui.delay * 1000))       # clamp interval to 17-50ms (~59-20fps)
         self._frame_timer.start(interval)
         return True
 
@@ -1191,7 +1197,7 @@ class PlayerQt(PyPlayerBackend):
     def show(self):
         if not self.player_and_widget_paired:
             self._player.setVideoOutput(self._video_widget)
-            if gui.mime_type == 'video':
+            if _helpers.gui.mime_type == 'video':
                 self._video_widget.show()
             else:
                 self._video_widget.hide()
@@ -1201,27 +1207,27 @@ class PlayerQt(PyPlayerBackend):
 
     def _on_timer(self):
         ''' Qt event. '''
-        if not gui.is_paused and not self.lock_timer:
-            frame = int((self._player.position() / 1000) * gui.frame_rate)
+        if not _helpers.gui.is_paused and not self.lock_timer:
+            frame = int((self._player.position() / 1000) * _helpers.gui.frame_rate)
             if frame:                                       # sometimes Qt will try to reset UI to 0 when we don't want it to
-                gui.update_progress(frame)
+                _helpers.gui.update_progress(frame)
                 self.ignore_zero_progress = False           # reset flag now that Qt is reporting the correct progress
             elif not self.ignore_zero_progress:             # only allow a `frame` of 0 if we're not ignoring it
-                gui.update_progress(0)
+                _helpers.gui.update_progress(0)
         else:                                               # continue painting hover timestamp/fullscreen UI while paused
-            gui.sliderProgress.update()
+            _helpers.gui.sliderProgress.update()
 
 
     def _on_error(self, error: QtMultimedia.QMediaPlayer.Error):
         ''' Qt event. '''
         logger.error(f'(!) PlayerQt reported an error: {error}')
         if error == QtMultimedia.QMediaPlayer.Error.FormatError:
-            gui.log_on_statusbar_signal.emit('(!) You do not have the proper codecs install to correctly play this file.')
+            _helpers.gui.log_on_statusbar_signal.emit('(!) You do not have the proper codecs install to correctly play this file.')
 
 
     def _on_media_status_changed(self, status: QtMultimedia.QMediaPlayer.MediaStatus):
         ''' Qt event. '''
-        logger.debug(f'Media status changed to {status} (restarted={gui.restarted}, ui_frame={gui.sliderProgress.value()})')
+        logger.debug(f'Media status changed to {status} (restarted={_helpers.gui.restarted}, ui_frame={_helpers.gui.sliderProgress.value()})')
 
         # HACK: QMediaPlayer likes to just... go longer than the video? like the frame it reports is often...
         # ...impossible, so to ensure that the frame doesn't visually change when we're restarting...
@@ -1229,11 +1235,11 @@ class PlayerQt(PyPlayerBackend):
         # TODO: this unfortunately has HORRIBLE side effects when resizing. we can go over 100%...
         # ...progress, as long as it conforms to whatever fake frame Qt thinks the media can go...
         # ...to, but I have no idea how to determine this value
-        if status == QtMultimedia.QMediaPlayer.MediaStatus.BufferedMedia and gui.restarted:
-            self.set_and_update_progress(gui.frame_count * 2)
-        elif status == QtMultimedia.QMediaPlayer.MediaStatus.EndOfMedia and not gui.is_paused and not gui.restarted:
+        if status == QtMultimedia.QMediaPlayer.MediaStatus.BufferedMedia and _helpers.gui.restarted:
+            self.set_and_update_progress(_helpers.gui.frame_count * 2)
+        elif status == QtMultimedia.QMediaPlayer.MediaStatus.EndOfMedia and not _helpers.gui.is_paused and not _helpers.gui.restarted:
             self._media_status = QtMultimedia.QMediaPlayer.MediaStatus.LoadingMedia
-            gui.restart_signal.emit()
+            _helpers.gui.restart_signal.emit()
         else:
             self._media_status = status
 
@@ -1244,7 +1250,7 @@ class PlayerQt(PyPlayerBackend):
 
 
     def on_fullscreen(self, fullscreen: bool):
-        if gui.mime_type == 'image':                        # use 20fps for images in fullscreen
+        if _helpers.gui.mime_type == 'image':                        # use 20fps for images in fullscreen
             self._frame_timer.setInterval(50 if fullscreen else 200)
 
 
@@ -1256,27 +1262,27 @@ class PlayerQt(PyPlayerBackend):
 
         if mime == 'image':
             self.lock_timer = True
-            interval = 50 if gui.isFullScreen() else 200    # update at 5fps for images (or 20fps if we're fullscreen)
+            interval = 50 if _helpers.gui.isFullScreen() else 200    # update at 5fps for images (or 20fps if we're fullscreen)
         else:
             self.lock_timer = False                         # ↓ clamp interval to 17-50ms (~59-20fps) TODO: `int()` or `round()` here?
-            interval = max(17, min(50, int(gui.delay * 1000)))
+            interval = max(17, min(50, int(_helpers.gui.delay * 1000)))
 
-        gui._open_cleanup_signal.emit()
+        _helpers.gui._open_cleanup_signal.emit()
         self._frame_timer.setInterval(interval)
         logger.info(f'PlayerQt timer set to {interval:.2f}ms')
 
 
     def on_restart(self):
-        ''' Called in `gui.restart()`, immediately after confirming the restart
-            is valid. `gui.restarted` will be False. After this event, the UI
+        ''' Called in `_helpers.gui.restart()`, immediately after confirming the restart
+            is valid. `_helpers.gui.restarted` will be False. After this event, the UI
             be updated and the player will be force-paused. This event should
             do any extraneous cleanup that must be urgently completed to ensure
             finished media is immediately/seamlessly ready to play again. '''
-        frame = gui.sliderProgress.value()
-        #if frame == gui.frame_count:
-        #    #frame = int((self._player.position() / 1000) * gui.frame_rate)
+        frame = _helpers.gui.sliderProgress.value()
+        #if frame == _helpers.gui.frame_count:
+        #    #frame = int((self._player.position() / 1000) * _helpers.gui.frame_rate)
         #    frame = int((self._player.position() / 1000) * self._player.metaData('VideoFrameRate'))
-        self.play(gui.video, will_restore=True)             # Qt will report the frame as 0 for a bit -> ignore this
+        self.play(_helpers.gui.video, will_restore=True)             # Qt will report the frame as 0 for a bit -> ignore this
         self.set_and_update_progress(frame, SetProgressContext.RESTART)
 
 
@@ -1290,8 +1296,8 @@ class PlayerQt(PyPlayerBackend):
         except:
             logger.warning(f'QMediaPlayer failed to play video {file}: {format_exc()}')
             if not _error:                                  # `_error` ensures we only attempt to play previous video once
-                if not gui.video: self._player.stop()       # no previous video to play, so just stop playing
-                else: self.play(gui.video, _error=True)     # attempt to play previous working video
+                if not _helpers.gui.video: self._player.stop()       # no previous video to play, so just stop playing
+                else: self.play(_helpers.gui.video, _error=True)     # attempt to play previous working video
             return False
 
 
@@ -1312,18 +1318,18 @@ class PlayerQt(PyPlayerBackend):
 
     def set_and_update_progress(self, frame: int = 0, context: int = SetProgressContext.NONE):
         # don't touch progress if we're currently opening a file
-        if gui.open_in_progress:
+        if _helpers.gui.open_in_progress:
             return
 
         if context == SetProgressContext.NAVIGATION_RELATIVE:
             self.lock_timer = True
-            gui.update_progress(frame)
-            self._player.setPosition(int((frame / gui.frame_rate) * 1000))
+            _helpers.gui.update_progress(frame)
+            self._player.setPosition(int((frame / _helpers.gui.frame_rate) * 1000))
             self.lock_timer = False
         else:
-            self._player.setPosition(int((frame / gui.frame_rate) * 1000))
-            gui.update_progress(frame)
+            self._player.setPosition(int((frame / _helpers.gui.frame_rate) * 1000))
+            _helpers.gui.update_progress(frame)
             if context == SetProgressContext.RESTORE:       # HACK: this helps fix flickering on the slider when switching from a...
-                gui.frame_override = frame                  # ...player that uses `update_progress_signal`, but otherwise does nothing
-        gui.gifPlayer.gif.jumpToFrame(frame)
+                _helpers.gui.frame_override = frame                  # ...player that uses `update_progress_signal`, but otherwise does nothing
+        _helpers.gui.gifPlayer.gif.jumpToFrame(frame)
 

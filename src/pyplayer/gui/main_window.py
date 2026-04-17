@@ -62,6 +62,29 @@ class MainWindow(
 ):
     """Main application window - composed from functional mixins."""
 
+    # Qt Signals
+    _open_cleanup_signal = QtCore.pyqtSignal()
+    _open_signal = QtCore.pyqtSignal(dict)
+    _open_external_command_signal = QtCore.pyqtSignal(str)
+    restart_signal = QtCore.pyqtSignal()
+    force_pause_signal = QtCore.pyqtSignal(bool)
+    restore_tracks_signal = QtCore.pyqtSignal(bool)
+    concatenate_signal = QtCore.pyqtSignal(QtW.QAction, list)
+    show_ffmpeg_warning_signal = QtCore.pyqtSignal(QtW.QWidget)
+    show_trim_dialog_signal = QtCore.pyqtSignal()
+    update_progress_signal = QtCore.pyqtSignal(int)
+    refresh_title_signal = QtCore.pyqtSignal()
+    set_save_progress_visible_signal = QtCore.pyqtSignal(bool)
+    set_save_progress_max_signal = QtCore.pyqtSignal(int)
+    set_save_progress_value_signal = QtCore.pyqtSignal(int)
+    set_save_progress_format_signal = QtCore.pyqtSignal(str)
+    set_save_progress_value_and_format_signal = QtCore.pyqtSignal(int, str)
+    disable_crop_mode_signal = QtCore.pyqtSignal(bool)
+    handle_updates_signal = QtCore.pyqtSignal(bool)
+    _handle_updates_signal = QtCore.pyqtSignal(dict, dict)
+    popup_signal = QtCore.pyqtSignal(dict)
+    log_on_statusbar_signal = QtCore.pyqtSignal(str)
+
     def __init__(self, app, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.app = app
@@ -154,6 +177,10 @@ class MainWindow(
         app.setWindowIcon(self.icons['window'])
 
     def setup(self):
+        # Module references for mixins (used as self.util, self.constants, etc.)
+        self.util = util
+        self.constants = constants
+
         self.first_video_fully_loaded = False   # NOTE: this can reset! use `videos_opened` to !00% know if files were opened this session
         self.closed = False
         self.restarted = False
@@ -292,6 +319,7 @@ class MainWindow(
         self.sliderProgress.dropEvent = self.vlc.dropEvent
         self.dockControls.leaveEvent = self.leaveEvent                       # ensures leaving dockControls hides cursor/controls in fullscreen
         self.dockControls.resizeEvent = self.dockControlsResizeEvent         # ensures dockControls correctly hides/shows widgets in fullscreen
+
         self.dockControls.keyPressEvent = self.keyPressEvent                 # pass dockControls key presses directly to GUI_Instance
         self.dockControls.keyReleaseEvent = self.keyReleaseEvent
         self.dockControls.enterEvent = lambda e: self.dockControls.unsetCursor()
@@ -381,6 +409,27 @@ class MainWindow(
 
         self.menuPlayer.addAction('Set player to VLC', lambda: self.set_player('VLC'))
         self.menuPlayer.addAction('Set player to Qt', lambda: self.set_player('Qt'))
+
+    def dockControlsResizeEvent(self, event: QtGui.QResizeEvent):
+        ''' Makes UI controls more compact as their size shrinks. '''
+        width = event.size().width()
+        self.lineOutput.setMinimumWidth(10 if width <= 380 else 120)
+        self.buttonTrim.setMinimumWidth(32 if width <= 347 else 44)
+
+        primary_visible = width > 335
+        secondary_visible = width > 394
+        self.buttonTrim.setVisible(primary_visible)
+        self.buttonMarkDeleted.setVisible(secondary_visible)
+        self.buttonSnapshot.setVisible(secondary_visible)
+        self.buttonExploreMediaPath.setVisible(secondary_visible)
+        self.spinHour.setVisible(primary_visible)
+
+        if primary_visible:
+            self.spinFrame.setPrefix(f'{self.frame_rate_rounded} FPS: ')
+            self.spinFrame.setMinimumSize(98, 0)
+        else:
+            self.spinFrame.setPrefix('')
+            self.spinFrame.setMinimumSize(0, 0)
 
     def external_command_interface_thread(
         self,
@@ -531,7 +580,7 @@ class MainWindow(
                 self.restore_tracks_signal.emit(True)
 
 
-# Classes from main.pyw that are used by MainWindow
+
 class Undo:
     """Represents an undoable action."""
     def __init__(self, type_: constants.UndoType, label: str, description: str, data: dict):

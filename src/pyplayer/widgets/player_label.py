@@ -9,7 +9,7 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets as QtW
 
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer.widgets import helpers as _helpers
 
 
 logger = logging.getLogger('widgets.py')
@@ -102,7 +102,7 @@ class QVideoPlayerLabel(QtW.QLabel):
     def _updateImageScale(self, index: int, force: bool = False):
         ''' Updates the scaling mode for images (including
             single-frame GIFs, but excluding cover art). '''
-        if not gui.actionCrop.isChecked() or force:
+        if not _helpers.gui.actionCrop.isChecked() or force:
             logger.debug(f'Updating image scale to mode {index}')
             self._imageScale = index
             if self.pixmap():
@@ -113,7 +113,7 @@ class QVideoPlayerLabel(QtW.QLabel):
 
     def _updateArtScale(self, index: int, force: bool = False):
         ''' Updates the scaling mode specifically for cover art. '''
-        if not gui.actionCrop.isChecked() or force:
+        if not _helpers.gui.actionCrop.isChecked() or force:
             logger.debug(f'Updating cover art scale to mode {index}')
             self._artScale = index
             if self.pixmap():
@@ -124,7 +124,7 @@ class QVideoPlayerLabel(QtW.QLabel):
 
     def _updateGifScale(self, index: int, force: bool = False):
         ''' Updates the scaling mode for animated GIFs. '''
-        if not gui.actionCrop.isChecked() or force:
+        if not _helpers.gui.actionCrop.isChecked() or force:
             logger.debug(f'Updating gif scale to mode {index}')
             self._gifScale = index + 1      # FIXME: +1 is temporary until gifs properly support dynamic fit
             if self.movie():                # FIXME: ^^^ this is set manually in qtstart!!!!!
@@ -158,7 +158,7 @@ class QVideoPlayerLabel(QtW.QLabel):
         self.gif.stop()
         self.gif.setFileName(self.gif.fileName())
         self.gif.start()
-        self.gif.setPaused(gui.is_paused)
+        self.gif.setPaused(_helpers.gui.is_paused)
 
 
     def _resetMovieSize(self):
@@ -166,15 +166,15 @@ class QVideoPlayerLabel(QtW.QLabel):
         self.setScaledContents(scale == ZOOM_FILL)
         if scale == ZOOM_NO_SCALING:
             self.gif.setScaledSize(QtCore.QSize(-1, -1))
-        elif scale == ZOOM_FIT or self.width() < gui.vwidth or self.height() < gui.vheight:
+        elif scale == ZOOM_FIT or self.width() < _helpers.gui.vwidth or self.height() < _helpers.gui.vheight:
             self._resizeMovieFit()
         elif scale == ZOOM_FILL:
             self.gif.setScaledSize(self.size())
 
         # TODO: the main issue with dynamic fit on gifs is that they start playing BEFORE we can actually see their true dimensions
         #       the fix appears to be something like loading the gif as a pixmap first, taking the dimensions, then playing as a gif
-        #print('before', self.width(), self.height(), gui.vwidth, gui.vheight, self.gif.scaledSize().width(), self.gif.scaledSize().height())
-        #if scale == ZOOM_FIT or self.width() < gui.vwidth or self.height() < gui.vheight: self._resizeMovieFit()
+        #print('before', self.width(), self.height(), _helpers.gui.vwidth, _helpers.gui.vheight, self.gif.scaledSize().width(), self.gif.scaledSize().height())
+        #if scale == ZOOM_FIT or self.width() < _helpers.gui.vwidth or self.height() < _helpers.gui.vheight: self._resizeMovieFit()
         #elif scale == ZOOM_FILL: self.gif.setScaledSize(self.size())
         #else: self.gif.setScaledSize(QtCore.QSize(-1, -1))
         self._resetMovieCache()
@@ -251,19 +251,19 @@ class QVideoPlayerLabel(QtW.QLabel):
 
         is_gif = bool(self.movie())
         maxZoom = 100.0 if not is_gif else 20.0
-        minZoomFactor = settings.spinZoomMinimumFactor.value()
+        minZoomFactor = _helpers.settings.spinZoomMinimumFactor.value()
         minZoom = self._baseZoom * minZoomFactor
-        if settings.checkZoomForceMinimum.isChecked():
+        if _helpers.settings.checkZoomForceMinimum.isChecked():
             minZoom = min(minZoomFactor, minZoom)
 
         if not _smooth:
             zoom = round(min(maxZoom, max(minZoom, zoom)), 4)
         if zoom == self.zoom and not force:
-            if minZoomFactor == 1.0 and zoom == self._baseZoom and settings.checkZoomAutoDisable1x.isChecked():
+            if minZoomFactor == 1.0 and zoom == self._baseZoom and _helpers.settings.checkZoomAutoDisable1x.isChecked():
                 return self.disableZoom()   # _baseZoom == _targetZoom -> faster reset during smooth zoom (not worth it)
             return zoom
 
-        willSmooth = not _smooth and settings.checkZoomSmooth.isChecked()
+        willSmooth = not _smooth and _helpers.settings.checkZoomSmooth.isChecked()
         if willSmooth:                      # about to start smoothing -> do first zoom-step now, start timer
             self._targetZoom = zoom
             if self._smoothZoomTimerID is None:
@@ -285,7 +285,7 @@ class QVideoPlayerLabel(QtW.QLabel):
             if pos:
                 if willSmooth:
                     self._smoothZoomPos = pos                   # set pos for smooth zoom to re-use
-                elif settings.checkZoomPrecise.isChecked():
+                elif _helpers.settings.checkZoomPrecise.isChecked():
                     newSize = QtCore.QSizeF(self.art.size()) * zoom
                     oldSize = QtCore.QSizeF(self.art.size()) * self.zoom
                     oldPos = self.pixmapPos
@@ -341,16 +341,16 @@ class QVideoPlayerLabel(QtW.QLabel):
             `Shift` is held down, `direction` is transposed. If `Alt` is held
             down, `direction` is tripled. '''
         if mod is None:
-            mod = app.keyboardModifiers()
+            mod = _helpers.app.keyboardModifiers()
         offset = direction
 
         # shift held -> scroll horizontally, alt held -> scroll 3x as far
         if mod & Qt.ShiftModifier:
             offset = offset.transposed()
         if mod & Qt.AltModifier:
-            gui.ignore_next_alt = True
+            _helpers.gui.ignore_next_alt = True
             offset = direction.transposed() * 3.0               # alt swaps horizontal/vertical scroll for some reason
-        if settings.checkZoomPanInvertScroll.isChecked():
+        if _helpers.settings.checkZoomPanInvertScroll.isChecked():
             offset *= -1
 
         self.pixmapPos += offset
@@ -361,7 +361,7 @@ class QVideoPlayerLabel(QtW.QLabel):
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         ''' Sets the offset between the cursor
             and our `QPixmap`'s local position. '''
-        if event.button() == Qt.LeftButton and not gui.actionCrop.isChecked():
+        if event.button() == Qt.LeftButton and not _helpers.gui.actionCrop.isChecked():
             self._draggingOffset = event.pos() - self.pixmapPos
         return super().mousePressEvent(event)                   # QLabel will pass event to underlying widgets (needed for cropping)
 
@@ -372,15 +372,15 @@ class QVideoPlayerLabel(QtW.QLabel):
             the offset we set in `mousePressEvent`, and resets the idle timer
             if crop mode is disabled. Otherwise, `QVideoPlayer.mouseMoveEvent()`
             is called to handle cropping. '''
-        if not gui.actionCrop.isChecked():
+        if not _helpers.gui.actionCrop.isChecked():
             if event.buttons() == Qt.LeftButton:                # why doesn't `event.button()` work here?
                 self.pixmapPos = event.pos() - self._draggingOffset
                 self._dragging = True
                 self.update()                                   # manually update
-            if settings.checkHideIdleCursor.isChecked() and gui.video:
-                gui.vlc.idle_timeout_time = time.time() + settings.spinHideIdleCursorDuration.value()
+            if _helpers.settings.checkHideIdleCursor.isChecked() and _helpers.gui.video:
+                _helpers.gui.vlc.idle_timeout_time = time.time() + _helpers.settings.spinHideIdleCursorDuration.value()
             else:
-                gui.vlc.idle_timeout_time = 0.0                 # 0 locks the cursor/UI
+                _helpers.gui.vlc.idle_timeout_time = 0.0                 # 0 locks the cursor/UI
         else:
             return super().mouseMoveEvent(event)                # QLabel will pass event to underlying widgets (needed for cropping)
 
@@ -404,14 +404,14 @@ class QVideoPlayerLabel(QtW.QLabel):
         ''' Increments the zoom factor or pans `self.pixmapPos` depending
             on what modifiers and mouse buttons are held down. '''
         event.accept()                                          # accept event or QLabel will pass it through no matter what
-        if gui.actionCrop.isChecked() or not gui.video: return
+        if _helpers.gui.actionCrop.isChecked() or not _helpers.gui.video: return
 
         # see if we want the secondary action and what our secondary action is
         mod = event.modifiers()
-        secondary_pans = not settings.checkZoomPanByDefault.isChecked()
+        secondary_pans = not _helpers.settings.checkZoomPanByDefault.isChecked()
         if event.buttons() == Qt.RightButton:
             use_secondary = True
-            gui.ignore_next_right_click = True
+            _helpers.gui.ignore_next_right_click = True
         else:
             use_secondary = mod & Qt.ControlModifier
 
@@ -422,16 +422,16 @@ class QVideoPlayerLabel(QtW.QLabel):
         # otherwise, calculate the factor with which to change our zoom
         add = event.angleDelta().y() > 0
         if mod & Qt.ShiftModifier:
-            factor = settings.spinZoomIncrement3.value()    # shift -> #3
+            factor = _helpers.settings.spinZoomIncrement3.value()    # shift -> #3
         elif mod & Qt.AltModifier:
-            factor = settings.spinZoomIncrement2.value()    # alt -> #2
+            factor = _helpers.settings.spinZoomIncrement2.value()    # alt -> #2
             add = event.angleDelta().x() > 0                # alt swaps horizontal/vertical scroll for some reason
-            gui.ignore_next_alt = True
+            _helpers.gui.ignore_next_alt = True
         else:
-            factor = settings.spinZoomIncrement1.value()    # default -> #1
+            factor = _helpers.settings.spinZoomIncrement1.value()    # default -> #1
 
         # calculate and apply our new zoom level
-        zoom = self._targetZoom if settings.checkZoomSmooth.isChecked() else self.zoom
+        zoom = self._targetZoom if _helpers.settings.checkZoomSmooth.isChecked() else self.zoom
         increment = (zoom / factor)
         self.setZoom(zoom + (increment if add else -increment), globalPos=QtGui.QCursor.pos())
 
@@ -474,7 +474,7 @@ class QVideoPlayerLabel(QtW.QLabel):
         #if True:
         if self.pixmap():
             painter = QtGui.QPainter(self)
-            if settings.checkScaleFiltering.isChecked():
+            if _helpers.settings.checkScaleFiltering.isChecked():
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
                 painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
                 transformMode = Qt.SmoothTransformation
@@ -491,7 +491,7 @@ class QVideoPlayerLabel(QtW.QLabel):
                 # at >1 zoom, drawing to QRect is MUCH faster and looks identical to art.scaled()
                 try:
                     if zoom >= 1:
-                        if settings.checkZoomPrecise.isChecked():
+                        if _helpers.settings.checkZoomPrecise.isChecked():
                             if scale != ZOOM_FILL: size = QtCore.QSizeF(pixmap.size())  # TODO V does this deform the image while zooming?
                             else:                  size = QtCore.QSizeF(self.size().scaled(pixmap.size(), Qt.KeepAspectRatio))
                             painter.drawPixmap(QtCore.QRectF(self.pixmapPos, size * zoom).toRect(), pixmap)

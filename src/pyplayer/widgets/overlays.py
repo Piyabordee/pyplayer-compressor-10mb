@@ -8,8 +8,8 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets as QtW
 
-import qthelpers
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer import qthelpers
+from pyplayer.widgets import helpers as _helpers
 
 
 logger = logging.getLogger('widgets.py')
@@ -172,8 +172,8 @@ class QTextOverlayPreview(QtW.QLabel):
             for overlay in self.overlays:
                 text = overlay.text.strip('\n')
 
-                #size = settings.spinHoverFontSize.value()   # TODO use currentFontChanged signals + more for performance? not needed?
-                #font = settings.comboHoverFont.currentFont()
+                #size = _helpers.settings.spinHoverFontSize.value()   # TODO use currentFontChanged signals + more for performance? not needed?
+                #font = _helpers.settings.comboHoverFont.currentFont()
 
                 #font = overlay.family
                 #font.setPointSize(overlay.size)

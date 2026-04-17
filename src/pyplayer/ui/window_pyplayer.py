@@ -723,7 +723,7 @@ class Ui_MainWindow(object):
         self.actionAddText.setText(_translate("MainWindow", "&Add text"))
         self.actionChangeDuration.setText(_translate("MainWindow", "&Duration"))
         self.actionCatLastDialog.setText(_translate("MainWindow", "Reopen last dialog"))
-from widgets import QDockWidgetPassthrough, QDraggableWindowFrame, QSpinBoxInputSignals, QVideoPlayer, QVideoPlayerLabel, QVideoSlider
+from pyplayer.widgets import QDockWidgetPassthrough, QDraggableWindowFrame, QSpinBoxInputSignals, QVideoPlayer, QVideoPlayerLabel, QVideoSlider
 
 
 if __name__ == "__main__":

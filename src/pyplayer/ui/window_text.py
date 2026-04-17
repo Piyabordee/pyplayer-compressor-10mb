@@ -195,7 +195,7 @@ class Ui_textDialog(object):
         self.spinShadowY.setSuffix(_translate("textDialog", "px"))
         self.spinShadowY.setPrefix(_translate("textDialog", "Y: "))
         self.spinBoxWidth.setSuffix(_translate("textDialog", "px"))
-from widgets import QTextOverlayPreview
+from pyplayer.widgets import QTextOverlayPreview
 
 
 if __name__ == "__main__":

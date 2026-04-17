@@ -22,6 +22,9 @@ except (ImportError, OSError):
         Error = 6
 
 from pyplayer.constants import APP_RUNNING, IS_WINDOWS
+from pyplayer.widgets import helpers
+from pyplayer import config, qthelpers
+from pyplayer.widgets.player_backend import PyPlayerBackend
 
 
 logger = logging.getLogger(__name__)
@@ -556,3 +559,85 @@ class PlaybackMixin:
             update_progress(self.frame_override)
         else:
             update_progress(frame)
+
+    def set_player(self, backend: str | PyPlayerBackend, _error: bool = False):
+        ''' Sets player to `backend`, which can be the raw `PyPlayerBackend`
+            class or its `__name__` property. Disables and waits on old player,
+            updates global aliases, enables and shows (unless minimized) the new
+            player, and restores media progress for non-images. '''
+        from pyplayer.widgets import helpers, player_backend as _pb
+
+        if self.player_swap_in_progress and not _error:
+            return logging.info('Not changing player - player swap is already in progress.')
+        self.player_swap_in_progress = True
+
+        old_player = None
+        try:
+            self.log_on_statusbar_signal.emit(f'Setting player to {backend} player...')
+            self.app.processEvents()
+
+            frame = helpers.get_ui_frame()
+            was_paused = self.is_paused
+            if isinstance(backend, str):
+                new_player = self.vlc.players.get(backend) or getattr(_pb, f'Player{backend}')(self.vlc)
+            else:
+                new_player = self.vlc.players.get(backend.__name__) or backend(self.vlc)
+
+            try:
+                if self.player.__name__ == 'Undefined':
+                    raise
+                old_player = self.player
+
+                if new_player == old_player:
+                    return self.statusbar.showMessage(f'You\'re already using {backend} player.', 3000)
+                if not self.constants.FFPROBE and not new_player.SUPPORTS_PARSING:
+                    if qthelpers.getPopupYesNo(
+                        title='You won\'t be able to open files!',
+                        text='You have FFprobe disabled, but have also selected a\nplayer that cannot sufficiently parse media on its own.\n\nContinue?',
+                        icon='warning',
+                        **self.get_popup_location_kwargs()
+                    ).exec() != QtW.QMessageBox.Yes:
+                        return
+
+                old_player.disable()
+                new_player.last_file = old_player.last_file
+            except:
+                pass
+
+            # update global aliases to reference our new player
+            helpers.player = new_player
+            helpers.play = new_player.play
+            helpers.show_on_player = new_player.show_text
+            helpers.set_and_update_progress = new_player.set_and_update_progress
+            helpers.set_player_position = new_player.set_position
+
+            self.frame_override = -1
+            if not new_player.enable():
+                raise
+            if self.isVisible():
+                new_player.show()
+
+            self.vlc.players[new_player.__name__] = new_player
+            self.vlc.player = new_player
+            self.player = new_player
+            config.cfg.player = new_player.__name__
+
+            self.restore(frame, was_paused)
+            self.log_on_statusbar_signal.emit(f'Player successfully set to {backend} player.')
+
+        except:
+            if _error:
+                from traceback import format_exc
+                msg = f'(CRITICAL FAILURE) New player could not be set, and old player "{backend}" could not be restored! {format_exc()}'
+                logging.critical(msg)
+                self.statusbar.showMessage(msg)
+            else:
+                from traceback import format_exc
+                self.log_on_statusbar_signal.emit(f'(!) New player "{backend}" could not be set: {format_exc()}')
+                if old_player:
+                    try:    self.set_player(old_player, _error=True)
+                    except: self.set_player('Qt', _error=True)
+                else:
+                    self.set_player('Qt', _error=True)
+        finally:
+            self.player_swap_in_progress = False

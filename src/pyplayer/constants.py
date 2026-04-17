@@ -218,10 +218,10 @@ def verify_ffmpeg(self, warning: bool = True, force_warning: bool = False) -> st
             if IS_WINDOWS:                                  # strip '.exe'
                 FFMPEG = FFMPEG[:-4]
         else:
-            import util
-            FFMPEG = util.get_from_PATH(filename)
+            from pyplayer.core import file_ops as _file_ops
+            FFMPEG = _file_ops.get_from_PATH(filename)
             if FFMPEG == '':
-                import config
+                from pyplayer import config
                 if config.cfg.ffmpegwarningignored and not force_warning:
                     import logging
                     warn = logging.getLogger('constants.py').warning
@@ -250,8 +250,8 @@ def verify_ffprobe(self, warning: bool = True) -> str:
                 if IS_WINDOWS:                                      # strip '.exe'
                     FFPROBE = FFPROBE[:-4]
             else:
-                import util
-                FFPROBE = util.get_from_PATH(filename)
+                from pyplayer.core import file_ops as _file_ops
+                FFPROBE = _file_ops.get_from_PATH(filename)
                 if FFPROBE == '' and warning:
                     _display_ffprobe_warning(self)
     return FFPROBE
@@ -277,7 +277,7 @@ If it wasn't, download the FFmpeg essentials below{warning_text}'''
         icon=QMessageBox.Warning,
         **self.get_popup_location()
     ).exec() == QMessageBox.Cancel:
-        import config
+        from pyplayer import config
         config.cfg.ffmpegwarningignored = True
     logging.getLogger('constants.py').warning('FFmpeg not detected. Current FFMPEG constant: ' + FFMPEG)
 

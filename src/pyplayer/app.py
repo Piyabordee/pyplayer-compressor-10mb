@@ -10,6 +10,18 @@ from threading import Thread
 from time import time as get_time
 from traceback import format_exc
 
+# Setup VLC DLL paths BEFORE importing VLC-dependent modules
+# This allows running from source without needing VLC in PATH
+# __file__ = src/pyplayer/app.py, so project root is 2 levels up
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_VLC_PATH = os.path.join(_PROJECT_ROOT, 'executable', 'include', 'vlc-windows')
+_LIB_PATH = os.path.join(_VLC_PATH, 'libvlc.dll')
+_MODULE_PATH = os.path.join(_VLC_PATH, 'plugins')
+if 'PYTHON_VLC_LIB_PATH' not in os.environ and os.path.exists(_LIB_PATH):
+    os.environ['PYTHON_VLC_LIB_PATH'] = _LIB_PATH
+if 'PYTHON_VLC_MODULE_PATH' not in os.environ and os.path.exists(_MODULE_PATH):
+    os.environ['PYTHON_VLC_MODULE_PATH'] = _MODULE_PATH
+
 from PyQt5 import QtGui, QtWidgets as QtW
 
 from pyplayer import config, constants
@@ -17,7 +29,7 @@ from pyplayer.gui.main_window import MainWindow
 from pyplayer.gui.signals import connect_widget_signals
 from pyplayer.gui.shortcuts import connect_shortcuts
 from pyplayer.gui.tray import exit as app_exit, get_tray_icon
-from pyplayer.widgets import widgets, helpers
+from pyplayer.widgets import helpers
 from pyplayer.widgets.helpers import set_aliases
 
 # Module-level args - accessed by update.py via lazy import
@@ -164,7 +176,7 @@ def main():
         logging.debug(f'PyPlayer opened at {constants.SCRIPT_PATH} with executable {sys.executable}')
         logging.debug('Creating QApplication and GUI...')
         app = QtW.QApplication(sys.argv)                # init qt
-        gui = widgets.gui = MainWindow(app)             # init empty GUI instance
+        gui = helpers.gui = MainWindow(app)             # init empty GUI instance
         gui.setup()                                     # setup gui's variables, widgets, and threads (0.3mb)
 
         # --------------------------------------------------------
@@ -204,44 +216,44 @@ def main():
         exists = os.path.exists
         sep = os.sep
 
-        # Set global aliases in widgets module for backward compatibility
-        widgets.settings = settings                     # set settings dialog as global object in widgets.py
-        widgets.player = player
-        widgets.image_player = image_player
-        widgets.play = play
-        widgets.play_image = play_image
-        widgets.refresh_title = refresh_title
-        widgets.marquee = marquee
-        widgets.show_on_player = show_on_player
-        widgets.log_on_statusbar = log_on_statusbar
-        widgets.show_on_statusbar = show_on_statusbar
-        widgets.update_progress = update_progress
-        widgets.set_and_update_progress = set_and_update_progress
-        widgets.set_volume_slider = set_volume_slider
-        widgets.get_volume_slider = get_volume_slider
-        widgets.get_volume_scroll_increment = get_volume_scroll_increment
-        widgets.get_ui_frame = get_ui_frame
-        widgets.set_progress_slider = set_progress_slider
-        widgets.set_hour_spin = set_hour_spin
-        widgets.set_minute_spin = set_minute_spin
-        widgets.set_second_spin = set_second_spin
-        widgets.set_frame_spin = set_frame_spin
-        widgets.set_player_position = set_player_position
-        widgets.set_gif_position = set_gif_position
-        widgets.set_current_time_text = set_current_time_text
-        widgets.current_time_lineedit_has_focus = current_time_lineedit_has_focus
-        widgets.can_load_cover_art = can_load_cover_art
-        widgets.can_show_cover_art = can_show_cover_art
-        widgets.parse_json = parse_json
-        widgets.abspath = abspath
-        widgets.exists = exists
-        widgets.sep = sep
+        # Set global aliases in helpers module for backward compatibility
+        helpers.settings = settings                     # set settings dialog as global object
+        helpers.player = player
+        helpers.image_player = image_player
+        helpers.play = play
+        helpers.play_image = play_image
+        helpers.refresh_title = refresh_title
+        helpers.marquee = marquee
+        helpers.show_on_player = show_on_player
+        helpers.log_on_statusbar = log_on_statusbar
+        helpers.show_on_statusbar = show_on_statusbar
+        helpers.update_progress = update_progress
+        helpers.set_and_update_progress = set_and_update_progress
+        helpers.set_volume_slider = set_volume_slider
+        helpers.get_volume_slider = get_volume_slider
+        helpers.get_volume_scroll_increment = get_volume_scroll_increment
+        helpers.get_ui_frame = get_ui_frame
+        helpers.set_progress_slider = set_progress_slider
+        helpers.set_hour_spin = set_hour_spin
+        helpers.set_minute_spin = set_minute_spin
+        helpers.set_second_spin = set_second_spin
+        helpers.set_frame_spin = set_frame_spin
+        helpers.set_player_position = set_player_position
+        helpers.set_gif_position = set_gif_position
+        helpers.set_current_time_text = set_current_time_text
+        helpers.current_time_lineedit_has_focus = current_time_lineedit_has_focus
+        helpers.can_load_cover_art = can_load_cover_art
+        helpers.can_show_cover_art = can_show_cover_art
+        helpers.parse_json = parse_json
+        helpers.abspath = abspath
+        helpers.exists = exists
+        helpers.sep = sep
 
         # Populate helpers module
         set_aliases(gui, app, config.cfg, settings)
 
         connect_widget_signals(gui)             # connect signals and slots
-        cfg = widgets.cfg = config.loadConfig(gui)      # create and load config (uses constants.CONFIG_PATH)
+        cfg = helpers.cfg = config.loadConfig(gui)      # create and load config (uses constants.CONFIG_PATH)
 
         # Ensure auto-compress setting is synced between config and settings checkbox
         if hasattr(settings, 'checkAutoCompress'):

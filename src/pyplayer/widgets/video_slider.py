@@ -10,7 +10,8 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets as QtW
 
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer.widgets import helpers as _helpers
+from colour import Color
 
 
 logger = logging.getLogger('widgets.py')
@@ -24,7 +25,7 @@ class QVideoSlider(QtW.QSlider):
 
         self.last_mouseover_time = 0
         self.last_mouseover_pos = None
-        self.clamp_minimum = False                              # NOTE: essentially aliases for gui.buttonTrimXXX.isChecked()
+        self.clamp_minimum = False                              # NOTE: essentially aliases for _helpers.gui.buttonTrimXXX.isChecked()
         self.clamp_maximum = False
         self.grabbing_clamp_minimum = False
         self.grabbing_clamp_maximum = False
@@ -39,8 +40,8 @@ class QVideoSlider(QtW.QSlider):
 
 
     # pass keystrokes through to parent
-    def keyPressEvent(self, event: QtGui.QKeyEvent):   return gui.keyPressEvent(event)
-    def keyReleaseEvent(self, event: QtGui.QKeyEvent): return gui.keyReleaseEvent(event)
+    def keyPressEvent(self, event: QtGui.QKeyEvent):   return _helpers.gui.keyPressEvent(event)
+    def keyReleaseEvent(self, event: QtGui.QKeyEvent): return _helpers.gui.keyReleaseEvent(event)
 
 
     def setMaximum(self, maximum: int):
@@ -60,48 +61,48 @@ class QVideoSlider(QtW.QSlider):
         # handle QVideoPlayer's fullscreen controls/idle cursor timeout
         try:
             now = time.time()
-            vlc = gui.vlc
+            vlc = _helpers.gui.vlc
             idle_time = vlc.idle_timeout_time
-            if not idle_time or idle_time > now or gui.restarted or (gui.player.get_state() == 5 and not gui.mime_type == 'image'):
-                if vlc.underMouse() and not gui.actionCrop.isChecked():
-                    cursor = app.overrideCursor()               # these if's may seem excessive, but it's literally...
+            if not idle_time or idle_time > now or _helpers.gui.restarted or (_helpers.gui.player.get_state() == 5 and not _helpers.gui.mime_type == 'image'):
+                if vlc.underMouse() and not _helpers.gui.actionCrop.isChecked():
+                    cursor = _helpers.app.overrideCursor()               # these if's may seem excessive, but it's literally...
                     if not cursor:                              # ...12x faster than actually setting the cursor
-                        app.setOverrideCursor(QtCore.Qt.ArrowCursor)
+                        _helpers.app.setOverrideCursor(QtCore.Qt.ArrowCursor)
                     elif cursor.shape() != QtCore.Qt.ArrowCursor:
-                        app.changeOverrideCursor(QtCore.Qt.ArrowCursor)
+                        _helpers.app.changeOverrideCursor(QtCore.Qt.ArrowCursor)
 
-                if gui.isFullScreen():
-                    current_opacity = gui.dockControls.windowOpacity()
-                    max_opacity = settings.spinFullScreenMaxOpacity.value() / 100
+                if _helpers.gui.isFullScreen():
+                    current_opacity = _helpers.gui.dockControls.windowOpacity()
+                    max_opacity = _helpers.settings.spinFullScreenMaxOpacity.value() / 100
                     if current_opacity < max_opacity:
                         fps = 20
-                        if gui.player.is_playing() and settings.checkHighPrecisionProgress.isChecked():
-                            fps = max(fps, gui.frame_rate_rounded)
+                        if _helpers.gui.player.is_playing() and _helpers.settings.checkHighPrecisionProgress.isChecked():
+                            fps = max(fps, _helpers.gui.frame_rate_rounded)
 
-                        fade_time = settings.spinFullScreenFadeDuration.value() or 0.01
+                        fade_time = _helpers.settings.spinFullScreenFadeDuration.value() or 0.01
                         opacity_increment = max_opacity / (fade_time * fps)
-                        gui.dockControls.setWindowOpacity(min(current_opacity + opacity_increment, max_opacity))
+                        _helpers.gui.dockControls.setWindowOpacity(min(current_opacity + opacity_increment, max_opacity))
 
             else:
-                if vlc.underMouse() and not gui.actionCrop.isChecked():
-                    cursor = app.overrideCursor()
+                if vlc.underMouse() and not _helpers.gui.actionCrop.isChecked():
+                    cursor = _helpers.app.overrideCursor()
                     if not cursor:
-                        app.setOverrideCursor(QtCore.Qt.BlankCursor)
+                        _helpers.app.setOverrideCursor(QtCore.Qt.BlankCursor)
                     elif cursor.shape() != QtCore.Qt.BlankCursor:
-                        app.changeOverrideCursor(QtCore.Qt.BlankCursor)
+                        _helpers.app.changeOverrideCursor(QtCore.Qt.BlankCursor)
 
-                if gui.isFullScreen():
-                    current_opacity = gui.dockControls.windowOpacity()
-                    min_opacity = settings.spinFullScreenMinOpacity.value() / 100
+                if _helpers.gui.isFullScreen():
+                    current_opacity = _helpers.gui.dockControls.windowOpacity()
+                    min_opacity = _helpers.settings.spinFullScreenMinOpacity.value() / 100
                     if current_opacity > min_opacity:
                         fps = 20
-                        if gui.player.is_playing() and settings.checkHighPrecisionProgress.isChecked():
-                            fps = max(fps, gui.frame_rate_rounded)
+                        if _helpers.gui.player.is_playing() and _helpers.settings.checkHighPrecisionProgress.isChecked():
+                            fps = max(fps, _helpers.gui.frame_rate_rounded)
 
-                        max_opacity = settings.spinFullScreenMaxOpacity.value() / 100
-                        fade_time = settings.spinFullScreenFadeDuration.value() or 0.01
+                        max_opacity = _helpers.settings.spinFullScreenMaxOpacity.value() / 100
+                        fade_time = _helpers.settings.spinFullScreenFadeDuration.value() or 0.01
                         opacity_increment = max_opacity / (fade_time * fps)
-                        gui.dockControls.setWindowOpacity(max(current_opacity - opacity_increment, min_opacity))
+                        _helpers.gui.dockControls.setWindowOpacity(max(current_opacity - opacity_increment, min_opacity))
         except:
             return
 
@@ -116,7 +117,7 @@ class QVideoSlider(QtW.QSlider):
                 next_index = self.color_index + 1
                 if next_index > len(self.color_order) - 1:
                     next_index = 0
-                self.colors = list(self.color_order[next_index].range_to(self.color_order[self.color_index], int(gui.frame_rate * 4)))
+                self.colors = list(self.color_order[next_index].range_to(self.color_order[self.color_index], int(_helpers.gui.frame_rate * 4)))
                 self.color_index = next_index
             if now > self.last_color_change_time + 0.05:        # update color at a MAX of 20fps
                 color = QtGui.QColor(self.colors.pop().get_hex())
@@ -137,28 +138,28 @@ class QVideoSlider(QtW.QSlider):
 
             # draw triangle markers for start/end and cover slider outside trim TODO: this is not efficient
             # New Quick Trim: show both START and END markers when Trim button is active
-            if gui.buttonTrim.isChecked():
+            if _helpers.gui.buttonTrim.isChecked():
                 # Draw START marker (minimum)
-                x_start = self.rangeValueToPixelPos(gui.minimum)
+                x_start = self.rangeValueToPixelPos(_helpers.gui.minimum)
                 p.setPen(pen_thick)
                 p.drawRoundedRect(groove_rect.left(), groove_rect.top(), x_start, groove_rect.height(), 2, 2)
                 p.setPen(pen_thin)  # ↓ triangle (pointing down)
                 p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x_start, 2), QtCore.QPoint(x_start, self.height() - 2), QtCore.QPoint(x_start - 4, int(self.height() / 2))]))
 
                 # Draw END marker (maximum)
-                x_end = self.rangeValueToPixelPos(gui.maximum)
+                x_end = self.rangeValueToPixelPos(_helpers.gui.maximum)
                 p.setPen(pen_thick)
                 p.drawRoundedRect(x_end, groove_rect.top(), groove_rect.width() - x_end - 1, groove_rect.height(), 2, 2)
                 p.setPen(pen_thin)  # ↓ triangle (pointing down)
                 p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x_end, 2), QtCore.QPoint(x_end, self.height() - 2), QtCore.QPoint(x_end + 4, int(self.height() / 2))]))
             elif self.clamp_minimum:
-                x = self.rangeValueToPixelPos(gui.minimum)
+                x = self.rangeValueToPixelPos(_helpers.gui.minimum)
                 p.setPen(pen_thick)
                 p.drawRoundedRect(groove_rect.left(), groove_rect.top(), x, groove_rect.height(), 2, 2)
                 p.setPen(pen_thin)  # ↓ triangle
                 p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x, 2), QtCore.QPoint(x, self.height() - 2), QtCore.QPoint(x - 4, int(self.height() / 2))]))
             if self.clamp_maximum:
-                x = self.rangeValueToPixelPos(gui.maximum)
+                x = self.rangeValueToPixelPos(_helpers.gui.maximum)
                 p.setPen(pen_thick)
                 p.drawRoundedRect(x, groove_rect.top(), groove_rect.width() - x - 1, groove_rect.height(), 2, 2)
                 p.setPen(pen_thin)  # ↓ triangle
@@ -174,8 +175,8 @@ class QVideoSlider(QtW.QSlider):
         #    p.drawPolygon(QtGui.QPolygon([QtCore.QPoint(x, 0), QtCore.QPoint(x, self.height()), QtCore.QPoint(x + 4, self.height() / 2)]))
 
         # hover timestamps
-        if settings.groupHover.isChecked():                     # ↓ 0.05 looks instant but avoids flickers
-            fade_time = max(0.05, settings.spinHoverFadeDuration.value())
+        if _helpers.settings.groupHover.isChecked():                     # ↓ 0.05 looks instant but avoids flickers
+            fade_time = max(0.05, _helpers.settings.spinHoverFadeDuration.value())
             if now <= self.last_mouseover_time + fade_time:
                 if self.underMouse():                           # ↓ get position relative to widget
                     pos = self.mapFromGlobal(QtGui.QCursor.pos())
@@ -185,11 +186,11 @@ class QVideoSlider(QtW.QSlider):
                     pos = self.last_mouseover_pos               # use last position if mouse is outside the slider
 
                 frame = self.pixelPosToRangeValue(pos)
-                h, m, s, _ = get_hms(round(gui.duration_rounded * (frame / gui.frame_count), 2))
-                text = f'{m}:{s:02}' if gui.duration_rounded < 3600 else f'{h}:{m:02}:{s:02}'
+                h, m, s, _ = get_hms(round(_helpers.gui.duration_rounded * (frame / _helpers.gui.frame_count), 2))
+                text = f'{m}:{s:02}' if _helpers.gui.duration_rounded < 3600 else f'{h}:{m:02}:{s:02}'
 
-                size = settings.spinHoverFontSize.value()       # TODO use currentFontChanged signals + more for performance? not needed?
-                font = settings.comboHoverFont.currentFont()
+                size = _helpers.settings.spinHoverFontSize.value()       # TODO use currentFontChanged signals + more for performance? not needed?
+                font = _helpers.settings.comboHoverFont.currentFont()
                 font.setPointSize(size)
                 #font.setPixelSize(size)
                 p.setFont(font)
@@ -199,7 +200,7 @@ class QVideoSlider(QtW.QSlider):
                 # TODO: I sure used a lot of different methods for fading things. should these be more unified?
                 alpha = int((self.last_mouseover_time + fade_time - now) * (255 / fade_time)) if fade_time != 0.05 else 255
 
-                if settings.checkHoverShadow.isChecked():       # draw shadow first (as black, slightly offset text)
+                if _helpers.settings.checkHoverShadow.isChecked():       # draw shadow first (as black, slightly offset text)
                     p.setPen(QtGui.QColor(0, 0, 0, alpha))      # set color to black
                     p.drawText(pos.x() + 1, pos.y() + 1, text)
                 self.hover_font_color.setAlpha(alpha)
@@ -207,7 +208,7 @@ class QVideoSlider(QtW.QSlider):
                 p.drawText(pos, text)                           # draw actual text over shadow
 
                 # my idea for using tooltips for displaying the time. works, but qt's tooltips don't refresh fast enough
-                #h, m, s, _ = get_hms(round(gui.duration_rounded * (frame / gui.frame_count), 2))
+                #h, m, s, _ = get_hms(round(_helpers.gui.duration_rounded * (frame / _helpers.gui.frame_count), 2))
                 #self.setToolTip(f'{h}:{m:02}:{s:02}' if h else f'{m}:{s:02}')
         p.end()
 
@@ -220,9 +221,9 @@ class QVideoSlider(QtW.QSlider):
         if self.orientation() == Qt.Vertical:
             up = not up
 
-        if up: forward = settings.checkScrollUpForForwards.isChecked()
-        else:  forward = not settings.checkScrollUpForForwards.isChecked()
-        gui.page_step(step=settings.spinScrollProgress.value() / 100, forward=forward)
+        if up: forward = _helpers.settings.checkScrollUpForForwards.isChecked()
+        else:  forward = not _helpers.settings.checkScrollUpForForwards.isChecked()
+        _helpers.gui.page_step(step=_helpers.settings.spinScrollProgress.value() / 100, forward=forward)
         event.accept()                                          # must accept event or it gets passed to the window
 
 
@@ -230,7 +231,7 @@ class QVideoSlider(QtW.QSlider):
         ''' Marks the current time when mousing-over and forces a `paintEvent`
             to begin drawing hover-timestamps. Does not require
             `setMouseTracking(True)`, as `enterEvent` fires regardless. '''
-        if gui.video:
+        if _helpers.gui.video:
             self.last_mouseover_time = time.time()              # save last mouseover time to use as a fade timer
             self.update()                                       # force-update to draw timestamp in self.paintEvent()
         return super().enterEvent(event)
@@ -254,22 +255,22 @@ class QVideoSlider(QtW.QSlider):
                 self.grabbing_clamp_minimum = False
                 self.grabbing_clamp_maximum = False
                 if self.clamp_minimum:
-                    min_pos = self.rangeValueToPixelPos(gui.minimum)
+                    min_pos = self.rangeValueToPixelPos(_helpers.gui.minimum)
                     if min_pos - radius < pos.x() < min_pos + radius:
                         self.grabbing_clamp_minimum = True
                         return  # Don't seek if grabbing START marker
                 if self.clamp_maximum:
-                    max_pos = self.rangeValueToPixelPos(gui.maximum)
+                    max_pos = self.rangeValueToPixelPos(_helpers.gui.maximum)
                     if max_pos - radius < pos.x() < max_pos + radius:
                         self.grabbing_clamp_maximum = True
                         return  # Don't seek if grabbing END marker
 
             # Normal seek behavior (not grabbing trim markers)
-            if gui.minimum < frame < gui.maximum:
-                gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
-            elif gui.buttonTrim.isChecked() and frame >= gui.minimum and frame <= gui.sliderProgress.maximum():
+            if _helpers.gui.minimum < frame < _helpers.gui.maximum:
+                _helpers.gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
+            elif _helpers.gui.buttonTrim.isChecked() and frame >= _helpers.gui.minimum and frame <= _helpers.gui.sliderProgress.maximum():
                 # In trim mode, also allow clicking between START and video end
-                gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
+                _helpers.gui.player.set_and_update_progress(frame, SetProgressContext.NAVIGATION_EXACT)
             #if abs(delta) > 0.025:                             # only change if difference between new/old positions is greater than 2.5%
             #    self.setValue(new_value)
 
@@ -287,24 +288,24 @@ class QVideoSlider(QtW.QSlider):
         # handle dragging
         else:
             frame = self.pixelPosToRangeValue(event.pos())      # get frame
-            gui.player.set_pause(True)                          # pause player while scrubbing
-            gui.gifPlayer.gif.setPaused(True)                   # pause GIF player while scrubbing
+            _helpers.gui.player.set_pause(True)                          # pause player while scrubbing
+            _helpers.gui.gifPlayer.gif.setPaused(True)                   # pause GIF player while scrubbing
 
             # Handle dragging trim markers
             if self.grabbing_clamp_minimum:
-                # Dragging START marker - update gui.minimum
-                new_min = min(frame, gui.maximum - 1)  # Don't let START pass END
-                gui.minimum = max(0, new_min)  # Don't go below 0
+                # Dragging START marker - update _helpers.gui.minimum
+                new_min = min(frame, _helpers.gui.maximum - 1)  # Don't let START pass END
+                _helpers.gui.minimum = max(0, new_min)  # Don't go below 0
                 self.update()  # Repaint to show new marker position
             elif self.grabbing_clamp_maximum:
-                # Dragging END marker - update gui.maximum
-                new_max = max(frame, gui.minimum + 1)  # Don't let END pass START
-                gui.maximum = min(gui.sliderProgress.maximum(), new_max)  # Don't go beyond video
+                # Dragging END marker - update _helpers.gui.maximum
+                new_max = max(frame, _helpers.gui.minimum + 1)  # Don't let END pass START
+                _helpers.gui.maximum = min(_helpers.gui.sliderProgress.maximum(), new_max)  # Don't go beyond video
                 self.update()  # Repaint to show new marker position
             else:
                 # Normal scrubbing - seek within trim range
-                clamped_frame = min(gui.maximum, max(gui.minimum, frame))
-                gui.player.set_and_update_progress(clamped_frame, SetProgressContext.SCRUB)
+                clamped_frame = min(_helpers.gui.maximum, max(_helpers.gui.minimum, frame))
+                _helpers.gui.player.set_and_update_progress(clamped_frame, SetProgressContext.SCRUB)
             self.last_mouseover_time = 0                        # reset last mouseover time to stop drawing timestamp immediately
             self.scrubbing = True                               # mark that we're scrubbing
 
@@ -322,22 +323,22 @@ class QVideoSlider(QtW.QSlider):
             pass  # Marker already updated in mouseMoveEvent
         elif self.scrubbing:
             # Normal scrubbing
-            if frame == gui.frame_count:
+            if frame == _helpers.gui.frame_count:
                 just_restarted = True
-                gui.restart()
+                _helpers.gui.restart()
             else:
-                clamped_frame = min(gui.maximum, max(gui.minimum, frame))
-                gui.player.set_and_update_progress(clamped_frame, SetProgressContext.NAVIGATION_EXACT)
+                clamped_frame = min(_helpers.gui.maximum, max(_helpers.gui.minimum, frame))
+                _helpers.gui.player.set_and_update_progress(clamped_frame, SetProgressContext.NAVIGATION_EXACT)
 
         if not just_restarted:                                  # do not touch pause state if we manually restarted
-            if gui.restarted:
-                if settings.checkNavigationUnpause.isChecked():
-                    gui.force_pause(False)                      # auto-unpause after restart
-                    gui.restarted = False
+            if _helpers.gui.restarted:
+                if _helpers.settings.checkNavigationUnpause.isChecked():
+                    _helpers.gui.force_pause(False)                      # auto-unpause after restart
+                    _helpers.gui.restarted = False
             else:
-                paused = False or gui.is_paused                 # stay paused if we were paused
-                gui.player.set_pause(paused)
-                gui.gifPlayer.gif.setPaused(paused)
+                paused = False or _helpers.gui.is_paused                 # stay paused if we were paused
+                _helpers.gui.player.set_pause(paused)
+                _helpers.gui.gifPlayer.gif.setPaused(paused)
 
         self.grabbing_clamp_minimum = False
         self.grabbing_clamp_maximum = False

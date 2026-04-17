@@ -8,7 +8,7 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets as QtW
 
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer.widgets import helpers as _helpers
 
 
 logger = logging.getLogger('widgets.py')

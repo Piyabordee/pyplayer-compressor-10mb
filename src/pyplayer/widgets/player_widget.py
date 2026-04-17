@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets as QtW
 
 from pyplayer import constants
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer.widgets import helpers as _helpers
 from pyplayer.widgets.player_backend import PyPlayerBackend
 
 
@@ -71,7 +71,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
 
     def reset_dragdrop_status(self):
         ''' Quickly clears drag-and-drop related messages and properties. '''
-        gui.statusbar.clearMessage()
+        _helpers.gui.statusbar.clearMessage()
         self.player.show_text('')
         self.dragdrop_last_modifiers = None
         self.dragdrop_in_progress = False
@@ -80,7 +80,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
     def reset_undermouse_state(self):
         ''' HACK: Manually updates `self.underMouse()` and
             immediately hides cursor if it's over the player. '''
-        if app.widgetAt(QtGui.QCursor.pos()) is self:
+        if _helpers.app.widgetAt(QtGui.QCursor.pos()) is self:
             self.setAttribute(Qt.WA_UnderMouse, True)
             self.idle_timeout_time = 1.0                    # 0 locks the UI, so set it to 1
         else:
@@ -139,8 +139,8 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
             expose these values, so we must calculate them manually. '''
         w = self.width()
         h = self.height()
-        vw = gui.vwidth
-        vh = gui.vheight
+        vw = _helpers.gui.vwidth
+        vh = _helpers.gui.vheight
         ratio = vw / vh                     # native aspect ratio
         widget_ratio = w / h                # aspect ratio of QVideoPlayer
         if widget_ratio < ratio:            # video fills viewport width (there are black bars top/bottom)
@@ -165,8 +165,8 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
             corresponding `QPoint` relative to `QVideoPlayer`'s viewport. '''
         w = self.width()
         h = self.height()
-        vw = gui.vwidth
-        vh = gui.vheight
+        vw = _helpers.gui.vwidth
+        vh = _helpers.gui.vheight
         ratio = vw / vh
         widget_ratio = w / h
         if widget_ratio < ratio:                            # video fills viewport width (there are black bars top/bottom)
@@ -195,15 +195,15 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         h = self.height()
 
         # TODO which one is faster, vsize version or commented-out version? is having vsize JUST for this worth it?
-        #vw = gui.vwidth
-        #vh = gui.vheight
-        #video_ratio = vw / vh                              # vh is never 0 (handled in gui.open())
+        #vw = _helpers.gui.vwidth
+        #vh = _helpers.gui.vheight
+        #video_ratio = vw / vh                              # vh is never 0 (handled in _helpers.gui.open())
         #widget_ratio = w / h
         #if widget_ratio < video_ratio:                     # video fills viewport width (there are black bars top/bottom)
 
         try:
-            #if gui.gifPlayer._baseZoom == 1.0:
-            #    expected_size = gui.vsize
+            #if _helpers.gui.gifPlayer._baseZoom == 1.0:
+            #    expected_size = _helpers.gui.vsize
             #    hvoid = (h - expected_size.height()) / 2
             #    wvoid = (w - expected_size.width()) / 2
             #    self.true_left =   int(wvoid)               # ensure potential error is outside bounds of actual video size
@@ -212,7 +212,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
             #    self.true_bottom = math.ceil(h - hvoid)     # ensure potential error is outside bounds of actual video size
             #else:
 
-            expected_size = gui.vsize.scaled(self.size(), Qt.KeepAspectRatio)
+            expected_size = _helpers.gui.vsize.scaled(self.size(), Qt.KeepAspectRatio)
             if expected_size.height() < h:                  # video fills viewport width (there are black bars top/bottom)
                 logger.debug('Video fills viewport width (there are black bars top/bottom)')
                 #void = ((h - (w / video_ratio)) / 2)
@@ -255,7 +255,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         crop_frames[3].setGeometry(0, crop_bottom, w, self.height() - crop_bottom)     # 3 bottom rectangle (full width)
 
         lfp = self.last_factored_points
-        #if gui.gifPlayer._baseZoom == 1:
+        #if _helpers.gui.gifPlayer._baseZoom == 1:
         #    lfp[0] = selection[0]
         #    lfp[1] = selection[1]
         #    lfp[2] = selection[2]
@@ -268,36 +268,36 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         lfp[3] = factor_point(selection[3])
 
         # set crop info panel's strings
-        gui.labelCropSize.setText(f'{lfp[1].x() - lfp[0].x():.0f}x{lfp[2].y() - lfp[0].y():.0f}')
-        gui.labelCropTop.setText(f'T: {lfp[0].y():.0f}')
-        gui.labelCropLeft.setText(f'L: {lfp[0].x():.0f}')
-        gui.labelCropRight.setText(f'R: {lfp[3].x():.0f}')
-        gui.labelCropBottom.setText(f'B: {lfp[3].y():.0f}')
+        _helpers.gui.labelCropSize.setText(f'{lfp[1].x() - lfp[0].x():.0f}x{lfp[2].y() - lfp[0].y():.0f}')
+        _helpers.gui.labelCropTop.setText(f'T: {lfp[0].y():.0f}')
+        _helpers.gui.labelCropLeft.setText(f'L: {lfp[0].x():.0f}')
+        _helpers.gui.labelCropRight.setText(f'R: {lfp[3].x():.0f}')
+        _helpers.gui.labelCropBottom.setText(f'B: {lfp[3].y():.0f}')
 
 
     def refresh_crop_cursor(self, pos: QtCore.QPoint):
         ''' Updates the cursor to an appropriate resize/grab cursor
             based on its `pos` relative to the current crop region. '''
-        cursor = app.overrideCursor()
+        cursor = _helpers.app.overrideCursor()
         crop_point_index = self.get_crop_point_index_in_range(pos)
         edge_index = self.get_crop_edge_index_in_range(pos)
         if crop_point_index is not None:        # https://doc.qt.io/qt-5/qguiapplication.html#overrideCursor
-            if cursor:     app.changeOverrideCursor(self.cursors[crop_point_index])
-            else:          app.setOverrideCursor(self.cursors[crop_point_index])
+            if cursor:     _helpers.app.changeOverrideCursor(self.cursors[crop_point_index])
+            else:          _helpers.app.setOverrideCursor(self.cursors[crop_point_index])
         elif edge_index is not None:
             if edge_index % 2 == 0:
-                if cursor: app.changeOverrideCursor(Qt.SizeHorCursor)
-                else:      app.setOverrideCursor(Qt.SizeHorCursor)
+                if cursor: _helpers.app.changeOverrideCursor(Qt.SizeHorCursor)
+                else:      _helpers.app.setOverrideCursor(Qt.SizeHorCursor)
             else:
-                if cursor: app.changeOverrideCursor(Qt.SizeVerCursor)
-                else:      app.setOverrideCursor(Qt.SizeVerCursor)
+                if cursor: _helpers.app.changeOverrideCursor(Qt.SizeVerCursor)
+                else:      _helpers.app.setOverrideCursor(Qt.SizeVerCursor)
         elif self.crop_rect.contains(pos):
-            if cursor:     app.changeOverrideCursor(Qt.SizeAllCursor)
-            else:          app.setOverrideCursor(Qt.SizeAllCursor)
+            if cursor:     _helpers.app.changeOverrideCursor(Qt.SizeAllCursor)
+            else:          _helpers.app.setOverrideCursor(Qt.SizeAllCursor)
         elif cursor:
-            app.restoreOverrideCursor()
-            while app.overrideCursor():
-                app.restoreOverrideCursor()
+            _helpers.app.restoreOverrideCursor()
+            while _helpers.app.overrideCursor():
+                _helpers.app.restoreOverrideCursor()
 
 
     # ---------------------
@@ -305,7 +305,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
     # ---------------------
     def paintEvent(self, event: QtGui.QPaintEvent):
         #super().paintEvent(event)                          # TODO this line isn't actually needed?
-        if not gui.actionCrop.isChecked(): return           # nothing else to paint if we're not cropping
+        if not _helpers.gui.actionCrop.isChecked(): return           # nothing else to paint if we're not cropping
 
         s = self.selection
         white = QtGui.QColor(255, 255, 255)
@@ -344,7 +344,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
             current media's aspect ratio, as long as a timer isn't already
             active, snap-mode is enabled, we haven't recently altered the UI/
             maximized/fullscreened, and a file has already been loaded. '''
-        if gui.actionCrop.isChecked():
+        if _helpers.gui.actionCrop.isChecked():
             self.find_true_borders()
             #self.selection = [self.defactor_point(p) for p in self.last_factored_points]    # this should work but has bizarre side effects
             for index in range(4):
@@ -353,17 +353,17 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         super().resizeEvent(event)
 
         # mark if we were recently fullscreen/maximized so we know not to snap-resize during the next few resizeEvents
-        if gui.isMaximized() or gui.isFullScreen():
+        if _helpers.gui.isMaximized() or _helpers.gui.isFullScreen():
             self.last_invalid_snap_state_time = time.time()
 
         # set timer to resize window to fit player (if no file has been played yet, do not set timers on resize)
-        # TODO: this does not work correctly on Linux!!! see `gui.timerEvent()` for more details
+        # TODO: this does not work correctly on Linux!!! see `_helpers.gui.timerEvent()` for more details
         elif (
-            not gui.timer_id_resize_snap
+            not _helpers.gui.timer_id_resize_snap
             and time.time() - self.last_invalid_snap_state_time > 0.35
-            and gui.first_video_fully_loaded
+            and _helpers.gui.first_video_fully_loaded
         ):
-            gui.timer_id_resize_snap = gui.startTimer(200, Qt.CoarseTimer)
+            _helpers.gui.timer_id_resize_snap = _helpers.gui.startTimer(200, Qt.CoarseTimer)
 
         self.player.on_resize(event)
 
@@ -372,10 +372,10 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         ''' Handles grabbing crop points/edges in crop-mode. Moves through the
             recent files list if the forwards/backwards buttons are pressed. '''
         try:
-            if not gui.actionCrop.isChecked():                          # no crop -> check for back/forward buttons
-                if event.button() == Qt.BackButton:      gui.cycle_recent_files(forward=False)
-                elif event.button() == Qt.ForwardButton: gui.cycle_recent_files(forward=True)
-                elif event.button() == Qt.MiddleButton:  gui.middle_click_player_actions[settings.comboPlayerMiddleClick.currentIndex()]()
+            if not _helpers.gui.actionCrop.isChecked():                          # no crop -> check for back/forward buttons
+                if event.button() == Qt.BackButton:      _helpers.gui.cycle_recent_files(forward=False)
+                elif event.button() == Qt.ForwardButton: _helpers.gui.cycle_recent_files(forward=True)
+                elif event.button() == Qt.MiddleButton:  _helpers.gui.middle_click_player_actions[_helpers.settings.comboPlayerMiddleClick.currentIndex()]()
                 return  # TODO add back/forward functionality globally (not as easy as it sounds?)
             elif not event.button() == Qt.LeftButton:                   # ignore non-left-clicks in crop mode
                 pos = self.mapFromGlobal(QtGui.QCursor.pos())
@@ -402,8 +402,8 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
                     self.dragging = -1
                     self.drag_axis_lock = None          # reset axis lock before panning
                     self.dragging_offset = pos - self.selection[0]
-                    if app.overrideCursor(): app.changeOverrideCursor(Qt.ClosedHandCursor)
-                    else:                    app.setOverrideCursor(Qt.ClosedHandCursor)
+                    if _helpers.app.overrideCursor(): _helpers.app.changeOverrideCursor(Qt.ClosedHandCursor)
+                    else:                    _helpers.app.setOverrideCursor(Qt.ClosedHandCursor)
             event.accept()
             self.update()
         except:
@@ -415,9 +415,9 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         ''' Handles mouse movement over the player by resetting the idle timer
             if crop mode is disabled, or by allowing crop edges/corners (or the
             entire region) to be dragged around if crop mode is enabled. '''
-        if not gui.actionCrop.isChecked():              # idle timeout is handled in QVideoSlider's paintEvent since it constantly updates
-            if settings.checkHideIdleCursor.isChecked() and gui.video:
-                self.idle_timeout_time = time.time() + settings.spinHideIdleCursorDuration.value()
+        if not _helpers.gui.actionCrop.isChecked():              # idle timeout is handled in QVideoSlider's paintEvent since it constantly updates
+            if _helpers.settings.checkHideIdleCursor.isChecked() and _helpers.gui.video:
+                self.idle_timeout_time = time.time() + _helpers.settings.spinHideIdleCursorDuration.value()
             else:
                 self.idle_timeout_time = 0.0            # 0 locks the cursor/UI
             return event.ignore()                       # only handle idle timeouts if we're not cropping
@@ -455,7 +455,7 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
                 # we are dragging a corner/edge
                 else:
                     # holding ctrl -> maintain square crop region
-                    if app.keyboardModifiers() & Qt.ControlModifier:    # TODO this barely works, but it works. for now
+                    if _helpers.app.keyboardModifiers() & Qt.ControlModifier:    # TODO this barely works, but it works. for now
                         self.dragging = 0                               # TODO bandaid fix so I don't have to finish all 4 points
                         new_x = new_pos.x()
                         anchor_index = (self.dragging + 1) % 4
@@ -501,23 +501,23 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
 
         # ensure we're actually over the player still and we're not panning/dragging a crop region
         if event.button() == Qt.LeftButton and self.rect().contains(event.pos()) and not self.panning:
-            if (self.dragging is None and not gui.actionCrop.isChecked()) or self.dragging == -1:
-                gui.pause()
+            if (self.dragging is None and not _helpers.gui.actionCrop.isChecked()) or self.dragging == -1:
+                _helpers.gui.pause()
 
         # right-click released -> prepare cursor/properties for context menu if necessary
         if event.button() == Qt.RightButton:
             # NOTE: this event happens before contextMenuEvent, which might not fire at all.
             # -> use a timer so contextMenuEvent has a chance to see the flag is set while...
             # ...guaranteeing the flag gets reset even if contextMenuEvent never fires
-            if gui.ignore_next_right_click:             # not actually opening context menu
+            if _helpers.gui.ignore_next_right_click:             # not actually opening context menu
                 def reset():
-                    gui.ignore_next_right_click = False
+                    _helpers.gui.ignore_next_right_click = False
                 QtCore.QTimer.singleShot(50, Qt.CoarseTimer, reset)
             else:
                 self.setCursor(Qt.ArrowCursor)          # HACK: reset base cursor as well to...
                 self.unsetCursor()                      # ...fix obscure drag-and-drop cursor bugs
-                while app.overrideCursor():
-                    app.restoreOverrideCursor()
+                while _helpers.app.overrideCursor():
+                    _helpers.app.restoreOverrideCursor()
 
         # left-click released and we're not dragging the crop region/points/edges
         elif self.dragging is not None:                 # refresh crop cursor if we were just dragging
@@ -531,8 +531,8 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         ''' Triggers user's desired double-click
             action after double-clicking the player. '''
         if event.button() == Qt.LeftButton:
-            index = settings.comboPlayerDoubleClick.currentIndex()
-            gui.double_click_player_actions[index]()
+            index = _helpers.settings.comboPlayerDoubleClick.currentIndex()
+            _helpers.gui.double_click_player_actions[index]()
 
 
     def leaveEvent(self, event: QtCore.QEvent):
@@ -542,23 +542,23 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
 
         # HACK: set base cursors for the widgets above/below the player...
         # ...to fix various obscure cursor bugs related to drag-and-drop
-        gui.dockControls.setCursor(Qt.ArrowCursor)      # (these are unset in their `enterEvent`s)
-        gui.menubar.setCursor(Qt.ArrowCursor)
+        _helpers.gui.dockControls.setCursor(Qt.ArrowCursor)      # (these are unset in their `enterEvent`s)
+        _helpers.gui.menubar.setCursor(Qt.ArrowCursor)
 
         # if cropping & the mouse is still over the player but NOT the controls (in fullscreen),...
         # ...don't reset cursor (the player AND each crop frame trigger their own `leaveEvent`'s)
         should_reset = True
-        if gui.actionCrop.isChecked():
+        if _helpers.gui.actionCrop.isChecked():
             mouse_pos = QtGui.QCursor.pos()
             if self.rect().contains(self.mapFromGlobal(mouse_pos)):
-                control_pos = gui.dockControls.mapFromGlobal(mouse_pos)
-                if not gui.dockControls.rect().contains(control_pos):
+                control_pos = _helpers.gui.dockControls.mapFromGlobal(mouse_pos)
+                if not _helpers.gui.dockControls.rect().contains(control_pos):
                     should_reset = False
 
         # we did not meet the specific scenario above
         if should_reset:
-            while app.overrideCursor():                 # reset cursor to default
-                app.restoreOverrideCursor()
+            while _helpers.app.overrideCursor():                 # reset cursor to default
+                _helpers.app.restoreOverrideCursor()
 
         self.dragging = None                            # release crop-drag
         #print('setting panning to true', event.buttons())
@@ -610,12 +610,12 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
                     msg = 'Drop to select first media file in folder (without autoplay)'
                 else:                                   # no modifiers (play first file with autoplay)
                     msg = 'Drop to autoplay folder contents, or hold ctrl/alt/shift for more options'
-            gui.statusbar.showMessage(msg, 0)
+            _helpers.gui.statusbar.showMessage(msg, 0)
             self.player.show_text(msg, timeout=0, position=0)
         elif self.dragdrop_subtitle_count:
             count = self.dragdrop_subtitle_count
             if count == len(files):
-                if gui.video:
+                if _helpers.gui.video:
                     if count == 1: msg = 'Drop to add subtitle file'
                     else:          msg = 'Drop to add subtitle files'
                 else:
@@ -623,10 +623,10 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
             else:
                 if count == 1: msg = 'Drop to play media and add subtitle file'
                 else:          msg = 'Drop to play media and add subtitle files'
-            gui.statusbar.showMessage(msg, 0)
+            _helpers.gui.statusbar.showMessage(msg, 0)
             self.player.show_text(msg, timeout=0, position=0)
-        elif not gui.video:                             # no media playing, can't show marquee. don't bother with special options
-            gui.statusbar.showMessage('Drop to play media, or hold ctrl/alt/shift while media is playing for additional options')
+        elif not _helpers.gui.video:                             # no media playing, can't show marquee. don't bother with special options
+            _helpers.gui.statusbar.showMessage('Drop to play media, or hold ctrl/alt/shift while media is playing for additional options')
         else:
             mod = event.keyboardModifiers()
             if mod != self.dragdrop_last_modifiers:
@@ -640,11 +640,11 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
                 elif mod & Qt.ShiftModifier:            # shift (add audio track)
                     if len(files) == 1: msg = 'Drop to add as audio track'
                     else:               msg = 'Drop to add first file as audio track'
-                    if os.path.abspath(files[0]) == gui.video:
+                    if os.path.abspath(files[0]) == _helpers.gui.video:
                         msg += ' (disabled due to identical file)'
                 else:
                     msg = 'Drop to play media, or hold ctrl/alt/shift for more options'
-                gui.statusbar.showMessage(msg, 0)
+                _helpers.gui.statusbar.showMessage(msg, 0)
                 self.player.show_text(msg, timeout=0, position=0)
         return super().dragMoveEvent(event)
 
@@ -667,38 +667,38 @@ class QVideoPlayer(QtW.QWidget):    # https://python-camelot.s3.amazonaws.com/gp
         self.unsetCursor()
 
         files = self.dragdrop_files
-        if gui.isFullScreen():  focus_window = settings.checkFocusOnDropFullscreen.isChecked()
-        elif gui.isMaximized(): focus_window = settings.checkFocusOnDropMaximized.isChecked()
-        else:                   focus_window = settings.checkFocusOnDropNormal.isChecked()
+        if _helpers.gui.isFullScreen():  focus_window = _helpers.settings.checkFocusOnDropFullscreen.isChecked()
+        elif _helpers.gui.isMaximized(): focus_window = _helpers.settings.checkFocusOnDropMaximized.isChecked()
+        else:                   focus_window = _helpers.settings.checkFocusOnDropNormal.isChecked()
 
         def open_media_and_add_subtitles():
             for file in files:                          # open first valid media file, if any
                 if os.path.splitext(file)[-1] not in constants.SUBTITLE_EXTENSIONS:
-                    if gui.open(file, focus_window=focus_window) == 1:
+                    if _helpers.gui.open(file, focus_window=focus_window) == 1:
                         break
-            if gui.video and self.dragdrop_subtitle_count:
+            if _helpers.gui.video and self.dragdrop_subtitle_count:
                 for file in files:                      # re-loop and add all valid subtitle files (if ANY media is playing)
                     if os.path.splitext(file)[-1] in constants.SUBTITLE_EXTENSIONS:
-                        gui.add_subtitle_files(file)
+                        _helpers.gui.add_subtitle_files(file)
 
         if self.dragdrop_is_folder:
-            gui.open_folder(files[0], event.keyboardModifiers(), focus_window=focus_window)
-        elif gui.video:
+            _helpers.gui.open_folder(files[0], event.keyboardModifiers(), focus_window=focus_window)
+        elif _helpers.gui.video:
             mod = event.keyboardModifiers()
             if mod & Qt.ControlModifier:                # ctrl (concat before current)
-                gui.concatenate_signal.emit(gui.actionCatBeforeThis, files)
+                _helpers.gui.concatenate_signal.emit(_helpers.gui.actionCatBeforeThis, files)
             elif mod & Qt.AltModifier:                  # alt (concat after current)
-                gui.concatenate_signal.emit(gui.actionCatAfterThis, files)
+                _helpers.gui.concatenate_signal.emit(_helpers.gui.actionCatAfterThis, files)
             elif mod & Qt.ShiftModifier:                # shift (add audio track, one file at time currently)
                 file = files[0]
-                if os.path.abspath(file) != gui.video: gui.add_audio(path=file)
-                else: gui.statusbar.showMessage('Cannot add file to itself as an audio track', 10000)
+                if os.path.abspath(file) != _helpers.gui.video: _helpers.gui.add_audio(path=file)
+                else: _helpers.gui.statusbar.showMessage('Cannot add file to itself as an audio track', 10000)
             else:                                       # no modifiers pressed, add first media file and any subtitle files
                 open_media_and_add_subtitles()
         else:
             open_media_and_add_subtitles()              # no media playing -> ignore modifiers entirely
 
-        if settings.checkRememberDropFolder.isChecked():                # update `cfg.lastdir` if desired
-            cfg.lastdir = files[0] if os.path.isdir(files[0]) else os.path.dirname(files[0])
+        if _helpers.settings.checkRememberDropFolder.isChecked():                # update `_helpers.cfg.lastdir` if desired
+            _helpers.cfg.lastdir = files[0] if os.path.isdir(files[0]) else os.path.dirname(files[0])
         return super().dropEvent(event)                 # run QWidget's built-in behavior
 

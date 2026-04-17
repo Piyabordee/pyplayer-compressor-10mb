@@ -3588,7 +3588,7 @@ class Ui_settingsDialog(object):
             main_window.auto_compress_after_trim = checked
 
 
-from widgets import QColorPickerButton, QKeySequenceFlexibleEdit
+from pyplayer.widgets import QColorPickerButton, QKeySequenceFlexibleEdit
 
 
 if __name__ == "__main__":

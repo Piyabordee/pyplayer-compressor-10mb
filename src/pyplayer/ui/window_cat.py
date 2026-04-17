@@ -187,7 +187,7 @@ class Ui_catDialog(object):
 "Note: This only works with specific formats in specific situations. Do not\n"
 "overwrite existing files in this mode unless you know what you\'re doing."))
         self.buttonNoEncode.setText(_translate("catDialog", "&Stream-copy (instant, imprecise)"))
-from widgets import QVideoList
+from pyplayer.widgets import QVideoList
 
 
 if __name__ == "__main__":

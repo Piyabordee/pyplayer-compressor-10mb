@@ -8,7 +8,7 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets as QtW
 
-from pyplayer.widgets.helpers import gui, app, cfg, settings
+from pyplayer.widgets import helpers as _helpers
 
 
 logger = logging.getLogger('widgets.py')
@@ -107,11 +107,11 @@ class QVideoList(QtW.QListWidget):                              # TODO this like
         path = item.toolTip()
 
         def play_and_refresh():
-            gui.open(
+            _helpers.gui.open(
                 path,
                 focus_window=False,
                 flash_window=False,
-                update_recent_list=path in gui.recent_files,
+                update_recent_list=path in _helpers.gui.recent_files,
                 update_raw_last_file=False
             )
             self.refresh_thumbnail_outlines()
@@ -158,8 +158,8 @@ class QVideoList(QtW.QListWidget):                              # TODO this like
         if isinstance(files, str):
             files = (files,)
         elif files is None:
-            files, cfg.lastdir = qthelpers.browseForFiles(
-                lastdir=cfg.lastdir,
+            files, _helpers.cfg.lastdir = qthelpers.browseForFiles(
+                lastdir=_helpers.cfg.lastdir,
                 caption='Select video to add',
                 filter='MP4 files (*.mp4);;All files (*)'
             )
@@ -180,7 +180,7 @@ class QVideoList(QtW.QListWidget):                              # TODO this like
                 parent=self,
                 thumbnail_path=thumbnail_path,
                 text=html,
-                is_playing=file == gui.video
+                is_playing=file == _helpers.gui.video
             )
 
             # create and setup QListWidgetItem as the base for our QVideoListItemWidget with our file and QLabel
@@ -280,7 +280,7 @@ class QVideoList(QtW.QListWidget):                              # TODO this like
     def refresh_thumbnail_outlines(self):
         for item in self:
             set_style = self.itemWidget(item).thumbnail.setStyleSheet
-            if item.toolTip() != gui.video: set_style('QLabel { padding: 4px; }')
+            if item.toolTip() != _helpers.gui.video: set_style('QLabel { padding: 4px; }')
             else: set_style('QLabel { padding: 4px;background-color: qlineargradient(spread:pad,x1:0,y1:0,x2:0,y2:1,stop:0.573864 rgba(0,255,255,255),stop:1 rgba(0,0,119,255)); }')
 
 
