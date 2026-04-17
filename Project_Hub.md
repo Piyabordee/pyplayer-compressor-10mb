@@ -1,19 +1,12 @@
 # Project Hub
 
-## Core
-- [[README]]
-- [[AGENTS]]
-- [[CLAUDE]]
-- [[TESTING_RESULTS]]
+> This file has been superseded by [[CLAUDE]] and [[docs/_index]].
+> Please use those files instead.
 
-## Design docs
-- [[2026-03-22-quick-trim-button-design]]
-- [[2026-03-24-auto-compress-after-trim-design]]
-- [[2026-03-28-repo-restructure-design]]
+---
 
-## Features
-- [[2026-03-22-quick-trim-button]]
-- [[2026-03-24-auto-compress-after-trim]]
+## Navigation
 
-## Release
-- [[GitHub_Release]]
+- [[CLAUDE]] — Central operational hub (Claude Code reads this first)
+- [[docs/_index]] — Full documentation map with links to all docs
+- [[AGENTS]] — Original deep reference (preserved)
