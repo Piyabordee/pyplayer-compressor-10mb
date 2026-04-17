@@ -121,3 +121,4 @@ bin/*/probed/
 
 # If you don't want to track the helper module:
 # resource_helper.py
+.env
