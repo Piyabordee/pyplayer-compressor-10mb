@@ -6,9 +6,15 @@ REM ============================================================
 
 SETLOCAL EnableDelayedExpansion
 
-SET "PROJECT_DIR=C:\path\to\pyplayer-master"
-SET "PYTHON_EXE=python"
-SET "INNO_COMPILER=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+REM Load configuration from .env file
+if not exist "%~dp0.env" (
+    echo ERROR: .env file not found
+    echo Copy .env.example to .env and fill in your local paths
+    pause
+    exit /b 1
+)
+
+FOR /F "usebackq eol=# tokens=1,* delims==" %%A IN ("%~dp0.env") DO SET "%%A=%%B"
 
 echo ============================================================
 echo PyPlayer Compressor - Build Script
