@@ -6,7 +6,6 @@
 
 ## High Priority TODOs
 
-From `main.pyw`:
 - DPI/scaling support
 - Further polish cropping feature
 - Stability for videos >60fps
@@ -28,9 +27,9 @@ From `main.pyw`:
 ## Auto-Compress Technical Debt
 
 From [[TESTING_RESULTS]]:
-1. UI Thread Blocking — Compression runs on the main thread, causing UI freeze. **Future: Move to QThread.**
+1. ~~UI Thread Blocking~~ — **Fixed.** Compression now runs in QThread via `workers/compression_worker.py`
 2. File Size Polling — Trim save integration uses polling to detect async save completion. Not production-robust.
-3. Cancel Functionality — Cancel button terminates FFmpeg, but UI remains frozen during compression.
+3. Cancel Functionality — Cancel button emits signal to worker; UI no longer freezes during compression.
 4. Add file validation after compression
 5. Handle edge cases (empty files, disk full, network drives)
 

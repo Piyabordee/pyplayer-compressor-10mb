@@ -74,7 +74,7 @@ pyplayer-master/
 ├── ui_sources/                # Qt Designer .ui source files
 ├── scripts/                   # Utility scripts (convert_ui.py)
 ├── assets/                    # Design files (.pdn logos)
-├── tests/                     # Test suite
+├── tests/                     # Test suite (86 tests, pytest)
 ├── themes/                    # Qt theme stylesheets
 │   └── resources/             # Icons (logo.ico, logo_filled.ico, updater.ico)
 ├── docs/                      # Project documentation (this tree)
@@ -98,7 +98,7 @@ These files are the original flat layout, preserved for fallback testing:
 
 | File | Purpose | New Location |
 |------|---------|--------------|
-| `main.pyw` | Entry point | `pyplayer.pyw` → `src/pyplayer/__main__.py` |
+| `main.pyw` | Thin wrapper (was monolith) | `run.pyw` → `src/pyplayer/__main__.py` |
 | `widgets.py` | All widgets | `src/pyplayer/widgets/` (per-class modules) |
 | `util.py` | Utilities | `src/pyplayer/core/ffmpeg.py`, `file_ops.py`, `media_utils.py` |
 | `qthelpers.py` | Qt helpers | `src/pyplayer/gui/helpers.py` |
@@ -111,9 +111,10 @@ These files are the original flat layout, preserved for fallback testing:
 
 ## Entry Points
 
-1. **`pyplayer.pyw`** — Backward-compatible entry point (root)
-2. **`python -m pyplayer`** — Package entry via `src/pyplayer/__main__.py`
-3. Both resolve to `src/pyplayer/app.py` → `gui/main_window.py`
+1. **`run.pyw`** — Backward-compatible entry point (root, formerly `pyplayer.pyw`)
+2. **`main.pyw`** — Legacy entry point (now a thin wrapper, same as run.pyw)
+3. **`python -m pyplayer`** — Package entry via `src/pyplayer/__main__.py`
+4. All resolve to `src/pyplayer/app.py` → `gui/main_window.py`
 
 ---
 

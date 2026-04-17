@@ -51,7 +51,7 @@ cd pyplayer-compressor-10mb
 pip install -r requirements.txt
 
 # Run the application
-python main.pyw
+python run.pyw               # or: python main.pyw / python -m pyplayer
 ```
 
 ### VLC Setup

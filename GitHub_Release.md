@@ -10,7 +10,7 @@
 ```
 ชื่อ:           PyPlayer Compressor 10MB
 Repo:           https://github.com/Piyabordee/pyplayer-compressor-10mb
-Entry Point:    main.pyw
+Entry Point:    run.pyw (or main.pyw / python -m pyplayer)
 Version:        0.6.0 beta
 Python:         3.13+
 UI Framework:   PyQt5
@@ -24,7 +24,8 @@ Platform:       Windows (primary)
 
 ```
 pyplayer-master/
-├── main.pyw                          # Entry point
+├── run.pyw                           # Entry point (backward-compatible)
+├── main.pyw                          # Legacy entry (thin wrapper)
 ├── constants.py                      # Version + REPOSITORY_URL + path resolution
 ├── config.py                         # Config load/save
 ├── util.py                           # FFmpeg wrappers

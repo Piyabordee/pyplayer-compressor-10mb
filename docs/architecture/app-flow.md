@@ -6,15 +6,16 @@
 
 ## Entry Points
 
-Both resolve to the same startup sequence:
+All resolve to the same startup sequence:
 
-1. `pyplayer.pyw` (root, backward-compatible)
-2. `python -m pyplayer` (package entry via `src/pyplayer/__main__.py`)
+1. `run.pyw` (root, backward-compatible, formerly `pyplayer.pyw`)
+2. `main.pyw` (legacy, now a thin wrapper)
+3. `python -m pyplayer` (package entry via `src/pyplayer/__main__.py`)
 
 ## Startup Sequence
 
 ```
-pyplayer.pyw or python -m pyplayer
+run.pyw / main.pyw / python -m pyplayer
     │
     └─→ src/pyplayer/__main__.py
         │
@@ -54,7 +55,7 @@ pyplayer.pyw or python -m pyplayer
 ## Key Patterns
 
 1. **Signal-Slot Connections** — Heavy use of Qt's signal/slot mechanism throughout
-2. **Threading** — Daemon threads for background operations (update checking, command interface)
+2. **Threading** — QThread workers for compression; daemon threads for update checking, command interface
 3. **Configuration** — Custom `ConfigParseBetterQt` class with UTF-16 encoding
 4. **Logging** — Python's `logging` module with file and stream handlers
 

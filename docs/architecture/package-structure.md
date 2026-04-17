@@ -26,6 +26,9 @@ src/pyplayer/
 │   ├── media_utils.py
 │   └── probe.py
 │
+├── workers/              # Background QThread workers
+│   └── compression_worker.py
+│
 ├── gui/                  # GUI layer
 │   ├── main_window.py    # MainWindow = mixin composition
 │   ├── helpers.py
@@ -60,6 +63,7 @@ src/pyplayer/
 | Layer | Subpackage | Qt Dependency | Purpose |
 |-------|-----------|---------------|---------|
 | Core | `core/` | None | Business logic, FFmpeg, compression, file ops |
+| Workers | `workers/` | PyQt5 (QtCore only) | Background QThread workers |
 | GUI | `gui/` | PyQt5 | Windows, mixins, signals, shortcuts |
 | Widgets | `widgets/` | PyQt5 | Reusable custom widgets |
 | UI | `ui/` | PyQt5 | Generated UI code (from Qt Designer) |
@@ -68,7 +72,7 @@ src/pyplayer/
 
 The codebase was restructured from a flat layout (Phase 7, 2026-03-28):
 
-- **Before:** `main.pyw` (531KB) was a single monolithic file
+- **Before:** `main.pyw` (531KB) was a single monolithic file (now a 23-line thin wrapper)
 - **After:** Split into ~49 focused modules under 800 lines each
 - **MainWindow** decomposed into 9 mixin classes
 - **Build configs** consolidated into `packaging/` directory
@@ -78,7 +82,7 @@ The codebase was restructured from a flat layout (Phase 7, 2026-03-28):
 
 | Old File | New Location(s) |
 |----------|----------------|
-| `main.pyw` | `pyplayer.pyw` + `src/pyplayer/__main__.py` + `src/pyplayer/app.py` |
+| `main.pyw` | `run.pyw` (backward-compatible wrapper) + `src/pyplayer/__main__.py` + `src/pyplayer/app.py` |
 | `widgets.py` | `src/pyplayer/widgets/` (per-class modules) |
 | `util.py` | `src/pyplayer/core/ffmpeg.py` + `file_ops.py` + `media_utils.py` |
 | `qthelpers.py` | `src/pyplayer/gui/helpers.py` |

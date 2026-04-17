@@ -29,9 +29,12 @@
 ## Quick Commands
 
 ```bash
-python main.pyw              # Run app (legacy entry)
+python run.pyw               # Run app (backward-compatible entry)
+python main.pyw              # Run app (legacy entry, thin wrapper)
 python -m pyplayer           # Run app (package entry)
 python build.py              # Build exe (from packaging/)
+pytest tests/ -v             # Run tests (86 tests)
+ruff check src/ tests/       # Lint
 ```
 
 ---

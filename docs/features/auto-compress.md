@@ -24,17 +24,18 @@ When enabled, automatically compresses trimmed videos to approximately 8.2MB usi
 ```
 1. User trims and saves a video
    → See [[docs/features/save-and-export]]
-2. SavingMixin detects auto_compress_after_trim is enabled
-3. compress_video() called from core/compression.py
+2. EditingMixin detects auto_compress_after_trim is enabled
+3. CompressionWorker created in a QThread (workers/compression_worker.py)
+4. compress_video() called from core/compression.py
    → Calculates target bitrate based on video duration
    → Runs FFmpeg compression subprocess
-4. CompressProgressDialog shows progress
-   → Modeless dialog — user can continue using the app
-   → Polling mechanism tracks FFmpeg progress
-5. On completion:
+5. CompressProgressDialog shows progress
+   → Modeless dialog with cancel support
+   → Progress updates via Qt signals (no UI freezing)
+6. On completion:
    → Compressed file replaces or follows the trimmed output
    → Temporary files cleaned up
-6. On error:
+7. On error:
    → Error dialog displayed
    → Temp file cleanup attempted
 ```
@@ -44,8 +45,9 @@ When enabled, automatically compresses trimmed videos to approximately 8.2MB usi
 | File | Role |
 |------|------|
 | `core/compression.py` | `compress_video()` — bitrate calculation, FFmpeg compression |
-| `gui/mixins/saving.py` | Integration point — triggers compress after trim save |
-| `gui/progress.py` | `CompressProgressDialog` — modeless progress UI |
+| `workers/compression_worker.py` | `CompressionWorker` — QThread worker with progress/finished signals |
+| `gui/mixins/editing.py` | `_compress_with_progress()` — creates QThread + worker |
+| `gui/progress.py` | `CompressProgressDialog` — modeless progress UI with cancel signal |
 | `config.py` | Load/save `auto_compress_after_trim` setting |
 | `core/ffmpeg.py` | FFmpeg subprocess wrapper |
 
@@ -59,9 +61,9 @@ When enabled, automatically compresses trimmed videos to approximately 8.2MB usi
 
 ## Technical Debt
 
-1. **UI Thread Blocking** — Compression runs on main thread. Future: QThread
+1. ~~**UI Thread Blocking**~~ — **Fixed.** Compression runs in QThread via `workers/compression_worker.py`
 2. **Polling** — Uses polling to detect when async save completes
-3. **Cancel** — Cancel button terminates FFmpeg but UI remains frozen
+3. **Cancel** — Cancel button emits signal to worker; UI no longer freezes
 4. **Validation** — No file validation after compression
 5. **Edge cases** — No handling for empty files, disk full, network drives
 

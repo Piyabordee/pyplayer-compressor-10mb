@@ -36,11 +36,9 @@ env/
 
 # Logs
 *.log
-pyplayer.log
 
 # OS
 .DS_Store
-.DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
@@ -59,70 +57,46 @@ config.ini
 
 # Claude Code
 .claude/
-memory/
+
+# PyPI / setuptools
+src/*.egg-info/
 
 # ============================================================
-# PyPlayer - Build output (Original)
+# PyPlayer - Build output
 # ============================================================
 pyplayer_*/
 
-# ============================================================
-# PyInstaller & Inno Setup Build Artifacts (NEW)
-# ============================================================
-# PyInstaller build outputs
+# PyInstaller
 executable/build/
 executable/compiling/
 executable/compiled/
 executable/dist/
 executable/*.spec.backup
-
-# PyInstaller temp files
+packaging/build/
+packaging/compiling/
+packaging/compiled/
+packaging/dist/
+packaging/__pycache__/
 *.toc
 *.wiz
 *.status
 
-# Inno Setup installer output
+# Inno Setup
 executable/installer_output/
+executable/*.~iss
+packaging/installer_output/
 *.exe
 !updater.exe
 
 # ============================================================
-# Packaging (restructured from executable/)
-# ============================================================
-packaging/build/
-packaging/compiling/
-packaging/installer_output/
-packaging/__pycache__/
-packaging/compiled/
-packaging/dist/
-
-# Inno Setup temp files
-executable/*.~iss
-
-# ============================================================
-# PyPlayer - Runtime temporary files
+# PyPlayer - Runtime temp files
 # ============================================================
 bin/temp/
-bin/temp/*
 !bin/temp/.gitkeep
-
-# PyPlayer - Thumbnails cache (if exists elsewhere)
 *.thumbs/
-
-# PyPlayer - Probe output files
 *.probe.txt
 bin/*/probed/
 
-# ============================================================
-# Build scripts output (Optional - uncomment if needed)
-# ============================================================
-# If you don't want to track the batch script:
-# build_installer.bat
-
-# If you don't want to track version info files:
-# executable/version_info_*.txt
-
-# If you don't want to track the helper module:
-# resource_helper.py
+# Environment
 .env
 /etc

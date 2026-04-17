@@ -55,12 +55,13 @@ See [[docs/build/packaging-guide]] for details.
 
 ## 7. Repository Restructure (Phase 7)
 
-- Flat layout reorganized into `src/pyplayer/` package with subpackages: `core/`, `gui/`, `widgets/`, `ui/`
-- `main.pyw` (531KB) split into ~49 focused modules under 800 lines each
+- Flat layout reorganized into `src/pyplayer/` package with subpackages: `core/`, `gui/`, `widgets/`, `ui/`, `workers/`
+- `main.pyw` (531KB) now a 23-line thin wrapper delegating to the package
 - MainWindow decomposed into 9 mixin classes for maintainability
 - Build configs consolidated into `packaging/` directory
-- Backward-compatible entry points: `pyplayer.pyw` and `python -m pyplayer`
-- Original flat files preserved in repo root for fallback testing
+- Backward-compatible entry points: `run.pyw` and `python -m pyplayer`
+- Auto-compress uses QThread (`workers/compression_worker.py`) instead of Python Thread
+- 86 automated tests for core modules with CI/CD (GitHub Actions + ruff)
 
 See [[docs/architecture/package-structure]] for the new layout.
 
